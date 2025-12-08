@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: themepro-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: themepro
+      POSTGRES_PASSWORD: themepro123
+      POSTGRES_DB: themepro_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+

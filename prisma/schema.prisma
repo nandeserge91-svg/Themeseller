@@ -1,0 +1,282 @@
+// Prisma Schema - Marketplace de Thèmes
+// Base de données PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================
+// ENUM DEFINITIONS
+// =====================
+
+enum Role {
+  CLIENT
+  VENDOR
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  COMPLETED
+  REFUNDED
+  CANCELLED
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+// =====================
+// USER & AUTH
+// =====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  firstName     String?
+  lastName      String?
+  avatar        String?
+  role          Role      @default(CLIENT)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  vendorProfile VendorProfile?
+  orders        Order[]
+  reviews       Review[]
+  cart          CartItem[]
+
+  @@map("users")
+}
+
+model VendorProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  storeName       String
+  slug            String   @unique
+  bio             String?  @db.Text
+  website         String?
+  socialLinks     Json?    // { twitter, facebook, instagram, linkedin }
+  logo            String?
+  banner          String?
+  totalSales      Int      @default(0)
+  totalRevenue    Decimal  @default(0) @db.Decimal(10, 2)
+  commissionRate  Decimal  @default(15) @db.Decimal(5, 2) // % plateforme
+  stripeAccountId String?  // Pour Stripe Connect
+  isVerified      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@map("vendor_profiles")
+}
+
+// =====================
+// PRODUCTS
+// =====================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?  // Lucide icon name
+  image       String?
+  parentId    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parent     Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children   Category[] @relation("CategoryHierarchy")
+  products   Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  title            String
+  slug             String        @unique
+  shortDescription String?       @db.VarChar(500)
+  description      String        @db.Text // HTML description
+  price            Decimal       @db.Decimal(10, 2)
+  salePrice        Decimal?      @db.Decimal(10, 2)
+  images           Json          // Array of image URLs
+  previewUrl       String?       // Live preview URL
+  mainFile         String        // Path to downloadable .zip
+  additionalFiles  Json?         // Other files
+  
+  // Technical info
+  version          String?
+  compatibility    Json?         // { wordpress: "6.0+", browsers: ["chrome", "firefox"] }
+  filesIncluded    Json?         // ["HTML", "CSS", "JS", "PSD"]
+  features         Json?         // Array of feature strings
+  tags             Json?         // Array of tags
+  
+  // Stats
+  downloads        Int           @default(0)
+  views            Int           @default(0)
+  salesCount       Int           @default(0)
+  averageRating    Decimal       @default(0) @db.Decimal(2, 1)
+  reviewCount      Int           @default(0)
+  
+  // Status & flags
+  status           ProductStatus @default(DRAFT)
+  isFeatured       Boolean       @default(false)
+  isNew            Boolean       @default(true)
+  rejectionReason  String?
+  
+  // Timestamps
+  publishedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  // Relations
+  vendorId    String
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category      @relation(fields: [categoryId], references: [id])
+  reviews     Review[]
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
+
+  @@index([vendorId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("products")
+}
+
+// =====================
+// REVIEWS
+// =====================
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  title     String?
+  comment   String   @db.Text
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId]) // Un avis par produit par user
+  @@map("reviews")
+}
+
+// =====================
+// CART
+// =====================
+
+model CartItem {
+  id        String   @id @default(cuid())
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+// =====================
+// ORDERS
+// =====================
+
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  status            OrderStatus @default(PENDING)
+  subtotal          Decimal     @db.Decimal(10, 2)
+  platformFee       Decimal     @db.Decimal(10, 2)
+  total             Decimal     @db.Decimal(10, 2)
+  
+  // Stripe
+  stripeSessionId   String?
+  stripePaymentId   String?
+  
+  // Timestamps
+  paidAt            DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String  @id @default(cuid())
+  price           Decimal @db.Decimal(10, 2)
+  vendorShare     Decimal @db.Decimal(10, 2)
+  platformShare   Decimal @db.Decimal(10, 2)
+  downloadCount   Int     @default(0)
+  maxDownloads    Int     @default(5)
+
+  // Relations
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  vendorId  String  // Snapshot du vendeur au moment de l'achat
+
+  @@map("order_items")
+}
+
+// =====================
+// PLATFORM SETTINGS
+// =====================
+
+model PlatformSettings {
+  id                 String   @id @default("default")
+  siteName           String   @default("ThemePro")
+  siteDescription    String?
+  defaultCommission  Decimal  @default(15) @db.Decimal(5, 2)
+  maintenanceMode    Boolean  @default(false)
+  stripeEnabled      Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
+
+
+
+
+
+
