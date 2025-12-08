@@ -3,6 +3,9 @@ import { registerUser, createToken, setAuthCookie } from '@/lib/auth'
 import { isValidEmail } from '@/lib/utils'
 import { isDatabaseAvailable } from '@/lib/db'
 
+// Force dynamic rendering - cette route utilise cookies()
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Vérifier si la base de données est configurée

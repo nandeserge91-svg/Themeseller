@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { removeAuthCookie } from '@/lib/auth'
 
+// Force dynamic rendering - cette route utilise cookies()
+export const dynamic = 'force-dynamic'
+
 export async function POST() {
   try {
     await removeAuthCookie()

@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma, isDatabaseAvailable } from '@/lib/db'
 
+// Force dynamic rendering - cette route utilise cookies()
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     // Si la base de données n'est pas configurée, retourner non authentifié
