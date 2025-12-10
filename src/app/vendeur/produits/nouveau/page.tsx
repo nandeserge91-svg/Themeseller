@@ -22,16 +22,11 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { useProductsStore } from '@/store/productsStore'
 
-const categories = [
-  { id: 'cat1', name: 'WordPress' },
-  { id: 'cat2', name: 'Shopify' },
-  { id: 'cat3', name: 'Systeme.io' },
-  { id: 'cat4', name: 'HTML' },
-  { id: 'cat5', name: 'Figma' },
-  { id: 'cat6', name: 'Tunnels de Vente' },
-  { id: 'cat7', name: 'Email Templates' },
-  { id: 'cat8', name: 'Landing Pages' },
-]
+interface Category {
+  id: string
+  name: string
+  slug: string
+}
 
 interface UploadedFile {
   file: File
@@ -48,6 +43,7 @@ export default function NouveauProduitPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
   const [images, setImages] = useState<string[]>([])
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [features, setFeatures] = useState<string[]>([''])
@@ -58,20 +54,29 @@ export default function NouveauProduitPage() {
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Vérifier l'authentification au chargement
+  // Vérifier l'authentification et charger les catégories au chargement
   useEffect(() => {
-    const checkAuth = async () => {
+    const init = async () => {
       try {
-        const response = await fetch('/api/auth/me')
-        if (!response.ok) {
+        // Vérifier l'authentification
+        const authResponse = await fetch('/api/auth/me')
+        if (!authResponse.ok) {
           setAuthError('Vous devez être connecté pour accéder à cette page.')
           return
         }
-        const data = await response.json()
-        if (data.user?.role !== 'VENDOR' && data.user?.role !== 'ADMIN') {
+        const authData = await authResponse.json()
+        if (authData.user?.role !== 'VENDOR' && authData.user?.role !== 'ADMIN') {
           setAuthError('Vous devez avoir un compte vendeur pour soumettre des produits.')
           return
         }
+        
+        // Charger les catégories
+        const catResponse = await fetch('/api/categories')
+        if (catResponse.ok) {
+          const catData = await catResponse.json()
+          setCategories(catData.categories || [])
+        }
+        
         setAuthError(null)
       } catch {
         setAuthError('Erreur de vérification. Veuillez vous reconnecter.')
@@ -79,7 +84,7 @@ export default function NouveauProduitPage() {
         setIsCheckingAuth(false)
       }
     }
-    checkAuth()
+    init()
   }, [])
 
   const [formData, setFormData] = useState({

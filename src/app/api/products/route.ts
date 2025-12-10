@@ -190,7 +190,19 @@ export async function POST(request: NextRequest) {
     // Validation basique
     if (!title || !description || !price || !categoryId) {
       return NextResponse.json(
-        { error: 'Champs requis manquants: title, description, price, categoryId' },
+        { error: `Champs requis manquants: ${!title ? 'title, ' : ''}${!description ? 'description, ' : ''}${!price ? 'price, ' : ''}${!categoryId ? 'categoryId' : ''}` },
+        { status: 400 }
+      )
+    }
+
+    // Vérifier que la catégorie existe
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId }
+    })
+
+    if (!category) {
+      return NextResponse.json(
+        { error: `Catégorie non trouvée avec l'ID: ${categoryId}` },
         { status: 400 }
       )
     }
@@ -255,8 +267,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erreur POST /api/products:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erreur serveur inconnue'
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
