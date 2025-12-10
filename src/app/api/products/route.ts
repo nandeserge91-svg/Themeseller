@@ -1,169 +1,171 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { getCurrentUser } from '@/lib/auth'
-import { slugify } from '@/lib/utils'
+import { prisma, isDatabaseAvailable } from '@/lib/db'
+import { verifyToken } from '@/lib/auth'
+import { cookies } from 'next/headers'
 
-// GET /api/products - Liste des produits
+export const dynamic = 'force-dynamic'
+
+// GET - Liste des produits (publique pour les approuvés, tous pour admin)
 export async function GET(request: NextRequest) {
   try {
+    if (!isDatabaseAvailable || !prisma) {
+      return NextResponse.json({ error: 'Database not available' }, { status: 503 })
+    }
+
     const { searchParams } = new URL(request.url)
-    
-    // Paramètres de pagination
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '12')
-    const skip = (page - 1) * limit
-
-    // Filtres
-    const category = searchParams.get('category')
-    const search = searchParams.get('q')
-    const sort = searchParams.get('sort') || 'popular'
-    const minPrice = searchParams.get('minPrice')
-    const maxPrice = searchParams.get('maxPrice')
-    const minRating = searchParams.get('minRating')
-    const featured = searchParams.get('featured')
+    const status = searchParams.get('status')
     const vendorId = searchParams.get('vendorId')
+    const category = searchParams.get('category')
+    const featured = searchParams.get('featured')
+    const limit = parseInt(searchParams.get('limit') || '50')
 
-    // Construction de la requête
-    const where: any = {
-      status: 'APPROVED',
+    // Vérifier si c'est un admin qui demande tous les produits
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
+    let isAdmin = false
+    let currentUserId: string | null = null
+
+    if (token) {
+      const user = verifyToken(token)
+      if (user) {
+        isAdmin = user.role === 'ADMIN'
+        currentUserId = user.id
+      }
     }
 
-    if (category && category !== 'all') {
-      where.category = { slug: category }
+    // Construire la requête
+    const where: any = {}
+
+    // Filtrer par statut
+    if (status) {
+      // Seuls les admins peuvent voir les non-approuvés
+      if (status !== 'APPROVED' && !isAdmin) {
+        // Les vendeurs peuvent voir leurs propres produits
+        if (vendorId && currentUserId) {
+          where.vendor = { userId: currentUserId }
+        } else {
+          where.status = 'APPROVED'
+        }
+      } else {
+        where.status = status
+      }
+    } else if (!isAdmin) {
+      // Par défaut, les non-admins ne voient que les approuvés
+      where.status = 'APPROVED'
     }
 
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { shortDescription: { contains: search, mode: 'insensitive' } },
-        { tags: { array_contains: [search] } },
-      ]
-    }
-
-    if (minPrice || maxPrice) {
-      where.price = {}
-      if (minPrice) where.price.gte = parseFloat(minPrice)
-      if (maxPrice) where.price.lte = parseFloat(maxPrice)
-    }
-
-    if (minRating) {
-      where.averageRating = { gte: parseFloat(minRating) }
-    }
-
-    if (featured === 'true') {
-      where.isFeatured = true
-    }
-
+    // Filtrer par vendeur
     if (vendorId) {
       where.vendorId = vendorId
     }
 
-    // Tri
-    let orderBy: any = {}
-    switch (sort) {
-      case 'newest':
-        orderBy = { createdAt: 'desc' }
-        break
-      case 'popular':
-        orderBy = { downloads: 'desc' }
-        break
-      case 'rating':
-        orderBy = { averageRating: 'desc' }
-        break
-      case 'price-asc':
-        orderBy = { price: 'asc' }
-        break
-      case 'price-desc':
-        orderBy = { price: 'desc' }
-        break
-      default:
-        orderBy = { downloads: 'desc' }
+    // Filtrer par catégorie
+    if (category) {
+      where.category = { slug: category }
     }
 
-    // Exécution des requêtes
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        orderBy,
-        skip,
-        take: limit,
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          shortDescription: true,
-          price: true,
-          salePrice: true,
-          images: true,
-          averageRating: true,
-          reviewCount: true,
-          downloads: true,
-          isNew: true,
-          isFeatured: true,
-          category: {
-            select: {
-              name: true,
-              slug: true,
-            },
-          },
-          vendor: {
-            select: {
-              id: true,
-              storeName: true,
-            },
-          },
-        },
-      }),
-      prisma.product.count({ where }),
-    ])
+    // Filtrer les featured
+    if (featured === 'true') {
+      where.isFeatured = true
+    }
 
-    return NextResponse.json({
-      products,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+    const products = await prisma.product.findMany({
+      where,
+      include: {
+        vendor: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              }
+            }
+          }
+        },
+        category: true,
       },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
     })
+
+    // Formater les produits pour le frontend
+    const formattedProducts = products.map(p => ({
+      id: p.id,
+      title: p.title,
+      slug: p.slug,
+      shortDescription: p.shortDescription,
+      description: p.description,
+      price: Number(p.price),
+      salePrice: p.salePrice ? Number(p.salePrice) : null,
+      images: p.images as string[],
+      image: (p.images as string[])[0] || '',
+      previewUrl: p.previewUrl,
+      version: p.version,
+      features: p.features as string[],
+      tags: p.tags as string[],
+      filesIncluded: p.filesIncluded as string[],
+      downloads: p.downloads,
+      views: p.views,
+      sales: p.salesCount,
+      rating: Number(p.averageRating),
+      reviewCount: p.reviewCount,
+      status: p.status.toLowerCase().replace('_', '-'),
+      isFeatured: p.isFeatured,
+      isNew: p.isNew,
+      rejectionReason: p.rejectionReason,
+      createdAt: p.createdAt.toISOString(),
+      publishedAt: p.publishedAt?.toISOString(),
+      category: p.category.name,
+      categoryId: p.categoryId,
+      categorySlug: p.category.slug,
+      vendor: {
+        id: p.vendorId,
+        name: p.vendor.storeName,
+        slug: p.vendor.slug,
+        email: p.vendor.user.email,
+        userId: p.vendor.userId,
+      }
+    }))
+
+    return NextResponse.json({ products: formattedProducts })
   } catch (error) {
     console.error('Erreur GET /api/products:', error)
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des produits' },
+      { error: 'Erreur serveur' },
       { status: 500 }
     )
   }
 }
 
-// POST /api/products - Créer un produit (vendeur uniquement)
+// POST - Créer un produit (vendeurs authentifiés)
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
+    if (!isDatabaseAvailable || !prisma) {
+      return NextResponse.json({ error: 'Database not available' }, { status: 503 })
+    }
 
+    // Vérifier l'authentification
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
+
+    if (!token) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    }
+
+    const user = verifyToken(token)
     if (!user) {
-      return NextResponse.json(
-        { error: 'Non authentifié' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
     }
 
-    if (user.role !== 'VENDOR' && user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Accès réservé aux vendeurs' },
-        { status: 403 }
-      )
-    }
-
-    // Récupérer le profil vendeur
+    // Vérifier que l'utilisateur est un vendeur
     const vendorProfile = await prisma.vendorProfile.findUnique({
-      where: { userId: user.id },
+      where: { userId: user.id }
     })
 
     if (!vendorProfile) {
-      return NextResponse.json(
-        { error: 'Profil vendeur non trouvé' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profil vendeur requis' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -176,28 +178,33 @@ export async function POST(request: NextRequest) {
       images,
       previewUrl,
       mainFile,
-      categoryId,
       version,
-      compatibility,
-      filesIncluded,
       features,
       tags,
+      filesIncluded,
+      categoryId,
+      status: productStatus
     } = body
 
-    // Validation
-    if (!title || !description || !price || !categoryId || !mainFile) {
+    // Validation basique
+    if (!title || !description || !price || !categoryId) {
       return NextResponse.json(
-        { error: 'Champs requis manquants' },
+        { error: 'Champs requis manquants: title, description, price, categoryId' },
         { status: 400 }
       )
     }
 
     // Générer le slug
-    const baseSlug = slugify(title)
+    const baseSlug = title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '')
+
+    // S'assurer que le slug est unique
     let slug = baseSlug
     let counter = 1
-
-    // Vérifier l'unicité du slug
     while (await prisma.product.findUnique({ where: { slug } })) {
       slug = `${baseSlug}-${counter}`
       counter++
@@ -208,40 +215,48 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         slug,
-        shortDescription,
+        shortDescription: shortDescription || '',
         description,
         price,
-        salePrice,
+        salePrice: salePrice || null,
         images: images || [],
-        previewUrl,
-        mainFile,
-        categoryId,
+        previewUrl: previewUrl || null,
+        mainFile: mainFile || '',
+        version: version || '1.0.0',
+        features: features || [],
+        tags: tags || [],
+        filesIncluded: filesIncluded || [],
+        status: productStatus === 'draft' ? 'DRAFT' : 'PENDING_REVIEW',
         vendorId: vendorProfile.id,
-        version,
-        compatibility,
-        filesIncluded,
-        features,
-        tags,
-        status: 'PENDING_REVIEW', // En attente d'approbation admin
+        categoryId,
       },
+      include: {
+        vendor: {
+          include: {
+            user: {
+              select: { email: true }
+            }
+          }
+        },
+        category: true,
+      }
     })
 
     return NextResponse.json({
       success: true,
-      product,
-    })
+      product: {
+        id: product.id,
+        title: product.title,
+        slug: product.slug,
+        status: product.status.toLowerCase().replace('_', '-'),
+      }
+    }, { status: 201 })
+
   } catch (error) {
     console.error('Erreur POST /api/products:', error)
     return NextResponse.json(
-      { error: 'Erreur lors de la création du produit' },
+      { error: 'Erreur serveur' },
       { status: 500 }
     )
   }
 }
-
-
-
-
-
-
-

@@ -46,7 +46,9 @@ const statusConfig = {
 export default function AdminProduitsPage() {
   // Utiliser le store partagé
   const { 
-    products: allProducts, 
+    products: allProducts,
+    isLoading,
+    fetchProducts,
     approveProduct, 
     rejectProduct, 
     suspendProduct, 
@@ -68,10 +70,11 @@ export default function AdminProduitsPage() {
   const menuRef = useRef<HTMLDivElement>(null)
   const { currency } = useCurrencyStore()
 
-  // Hydratation côté client
+  // Charger les produits depuis l'API
   useEffect(() => {
     setIsHydrated(true)
-  }, [])
+    fetchProducts() // Charger tous les produits (l'API filtre selon le rôle)
+  }, [fetchProducts])
 
   // Fermer le menu quand on clique ailleurs
   useEffect(() => {
@@ -100,42 +103,62 @@ export default function AdminProduitsPage() {
   })
 
   // Actions
-  const handleApprove = (productId: string) => {
-    approveProduct(productId)
+  const handleApprove = async (productId: string) => {
+    const result = await approveProduct(productId)
     setOpenMenuId(null)
-    setNotification({ type: 'success', message: 'Produit approuvé avec succès !' })
+    if (result.success) {
+      setNotification({ type: 'success', message: 'Produit approuvé avec succès !' })
+    } else {
+      setNotification({ type: 'error', message: result.error || 'Erreur lors de l\'approbation' })
+    }
   }
 
-  const handleReject = (productId: string, reason: string) => {
-    rejectProduct(productId, reason)
+  const handleReject = async (productId: string, reason: string) => {
+    const result = await rejectProduct(productId, reason)
     setRejectingProduct(null)
-    setNotification({ type: 'success', message: 'Produit rejeté.' })
+    if (result.success) {
+      setNotification({ type: 'success', message: 'Produit rejeté.' })
+    } else {
+      setNotification({ type: 'error', message: result.error || 'Erreur lors du rejet' })
+    }
   }
 
-  const handleSuspend = (productId: string) => {
-    suspendProduct(productId)
+  const handleSuspend = async (productId: string) => {
+    const result = await suspendProduct(productId)
     setOpenMenuId(null)
-    setNotification({ type: 'success', message: 'Produit retiré de la vente.' })
+    if (result.success) {
+      setNotification({ type: 'success', message: 'Produit retiré de la vente.' })
+    } else {
+      setNotification({ type: 'error', message: result.error || 'Erreur lors de la suspension' })
+    }
   }
 
-  const handleReactivate = (productId: string) => {
-    reactivateProduct(productId)
+  const handleReactivate = async (productId: string) => {
+    const result = await reactivateProduct(productId)
     setOpenMenuId(null)
-    setNotification({ type: 'success', message: 'Produit remis en vente !' })
+    if (result.success) {
+      setNotification({ type: 'success', message: 'Produit remis en vente !' })
+    } else {
+      setNotification({ type: 'error', message: result.error || 'Erreur lors de la réactivation' })
+    }
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deletingProduct) {
-      deleteProduct(deletingProduct.id)
+      const result = await deleteProduct(deletingProduct.id)
       setDeletingProduct(null)
-      setNotification({ type: 'success', message: 'Produit supprimé définitivement.' })
+      if (result.success) {
+        setNotification({ type: 'success', message: 'Produit supprimé définitivement.' })
+      } else {
+        setNotification({ type: 'error', message: result.error || 'Erreur lors de la suppression' })
+      }
     }
   }
 
   const pendingCount = products.filter(p => p.status === 'pending').length
 
-  // Afficher un loader pendant l'hydratation
-  if (!isHydrated) {
+  // Afficher un loader pendant le chargement
+  if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

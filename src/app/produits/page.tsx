@@ -61,12 +61,13 @@ export default function ProduitsPage() {
   const [isHydrated, setIsHydrated] = useState(false)
 
   // Récupérer les produits depuis le store (seulement les actifs/approuvés)
-  const { products: storeProducts } = useProductsStore()
+  const { products: storeProducts, isLoading, fetchProducts, getActiveProducts } = useProductsStore()
   
-  // Hydratation côté client
+  // Charger les produits depuis l'API
   useEffect(() => {
     setIsHydrated(true)
-  }, [])
+    fetchProducts({ status: 'active' }) // Charger seulement les produits approuvés
+  }, [fetchProducts])
 
   // Transformer les produits du store pour l'affichage
   const allProducts = useMemo(() => {
@@ -166,8 +167,8 @@ export default function ProduitsPage() {
     minRating > 0,
   ].filter(Boolean).length
 
-  // Afficher un loader pendant l'hydratation
-  if (!isHydrated) {
+  // Afficher un loader pendant le chargement
+  if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

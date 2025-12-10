@@ -1,408 +1,432 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 
 export interface Product {
   id: string
   title: string
   slug: string
   image: string
+  images?: string[]
   price: number
-  salePrice?: number
+  salePrice?: number | null
   sales: number
-  revenue: number
-  status: 'active' | 'pending' | 'rejected' | 'suspended' | 'draft'
+  revenue?: number
+  status: 'active' | 'pending' | 'pending-review' | 'rejected' | 'suspended' | 'draft' | 'approved' | 'archived'
   rating: number
+  reviewCount?: number
   views: number
   createdAt: string
+  publishedAt?: string
   submittedAt?: string
   category: string
   categoryId: string
+  categorySlug?: string
   description: string
-  shortDescription: string
+  shortDescription?: string
   previewUrl?: string
   version: string
   features: string[]
   tags: string[]
   filesIncluded: string[]
-  rejectionReason?: string
+  rejectionReason?: string | null
   fileName?: string
   fileSize?: number
-  // Info vendeur
+  isFeatured?: boolean
+  isNew?: boolean
   vendor: {
     id: string
     name: string
     email: string
+    slug?: string
+    userId?: string
   }
 }
 
 interface ProductsState {
   products: Product[]
-  addProduct: (product: Omit<Product, 'id' | 'slug' | 'sales' | 'revenue' | 'rating' | 'views' | 'createdAt' | 'submittedAt'>) => void
-  updateProduct: (id: string, updates: Partial<Product>) => void
-  deleteProduct: (id: string) => void
-  approveProduct: (id: string) => void
-  rejectProduct: (id: string, reason: string) => void
-  suspendProduct: (id: string) => void
-  reactivateProduct: (id: string) => void
-  submitProduct: (id: string) => void
-  resubmitProduct: (id: string) => void
-  saveDraft: (product: Omit<Product, 'id' | 'slug' | 'sales' | 'revenue' | 'rating' | 'views' | 'createdAt' | 'status'>) => void
+  isLoading: boolean
+  error: string | null
+  lastFetch: number | null
+  
+  // Actions API
+  fetchProducts: (filters?: { status?: string; vendorId?: string; category?: string }) => Promise<void>
+  fetchProduct: (idOrSlug: string) => Promise<Product | null>
+  createProduct: (product: Partial<Product>) => Promise<{ success: boolean; product?: Product; error?: string }>
+  updateProduct: (id: string, updates: Partial<Product>) => Promise<{ success: boolean; error?: string }>
+  deleteProduct: (id: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Actions admin
+  approveProduct: (id: string) => Promise<{ success: boolean; error?: string }>
+  rejectProduct: (id: string, reason: string) => Promise<{ success: boolean; error?: string }>
+  suspendProduct: (id: string) => Promise<{ success: boolean; error?: string }>
+  reactivateProduct: (id: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Actions vendeur
+  submitProduct: (id: string) => Promise<{ success: boolean; error?: string }>
+  resubmitProduct: (id: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Helpers
   getVendorProducts: (vendorId: string) => Product[]
   getPendingProducts: () => Product[]
+  getActiveProducts: () => Product[]
+  getProductBySlug: (slug: string) => Product | undefined
 }
 
-// Générer un slug à partir du titre
-const generateSlug = (title: string): string => {
-  return title
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '')
+// Mapper le statut de l'API vers le format frontend
+const mapStatus = (status: string): Product['status'] => {
+  const statusMap: Record<string, Product['status']> = {
+    'approved': 'active',
+    'pending-review': 'pending',
+    'pending_review': 'pending',
+    'rejected': 'rejected',
+    'archived': 'suspended',
+    'draft': 'draft',
+  }
+  return statusMap[status] || status as Product['status']
 }
 
-// Produits initiaux de démonstration (admin et vendeurs)
-const initialProducts: Product[] = [
-  // Produits du vendeur "current-vendor" (vendeur connecté en démo)
-  {
-    id: 'v1',
-    title: 'ProBusiness - Template WordPress Premium',
-    slug: 'probusiness-template-wordpress',
-    image: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=200&h=150&fit=crop',
-    price: 59,
-    sales: 124,
-    revenue: 6076,
-    status: 'active',
-    rating: 4.8,
-    views: 3420,
-    createdAt: '2024-01-01',
-    submittedAt: '2023-12-28',
-    category: 'WordPress',
-    categoryId: 'cat1',
-    description: 'Un template WordPress premium pour les entreprises.',
-    shortDescription: 'Template business moderne et responsive.',
-    version: '2.1.0',
-    features: ['Responsive', '50+ pages', 'SEO optimisé'],
-    tags: ['business', 'corporate', 'professional'],
-    filesIncluded: ['HTML', 'CSS', 'JavaScript', 'PHP'],
-    vendor: { id: 'current-vendor', name: 'Mon Entreprise', email: 'vendeur@demo.com' },
-  },
-  {
-    id: 'v2',
-    title: 'SaaS Landing Page - HTML5 Template',
-    slug: 'saas-landing-page-html5',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200&h=150&fit=crop',
-    price: 39,
-    sales: 89,
-    revenue: 3471,
-    status: 'active',
-    rating: 4.6,
-    views: 2156,
-    createdAt: '2024-01-05',
-    submittedAt: '2024-01-02',
-    category: 'HTML',
-    categoryId: 'cat4',
-    description: 'Landing page moderne pour les applications SaaS.',
-    shortDescription: 'Landing page SaaS avec animations.',
-    version: '1.5.0',
-    features: ['Animations CSS', 'Mobile first', 'Fast loading'],
-    tags: ['saas', 'startup', 'landing'],
-    filesIncluded: ['HTML', 'CSS', 'JavaScript'],
-    vendor: { id: 'current-vendor', name: 'Mon Entreprise', email: 'vendeur@demo.com' },
-  },
-  // Produits d'autres vendeurs (visibles par l'admin)
-  {
-    id: 'a1',
-    title: 'Dashboard UI Kit - Figma',
-    slug: 'dashboard-ui-kit-figma',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&h=150&fit=crop',
-    price: 79,
-    sales: 0,
-    revenue: 0,
-    status: 'pending',
-    rating: 0,
-    views: 0,
-    createdAt: '2024-01-15',
-    submittedAt: '2024-01-15',
-    category: 'Figma',
-    categoryId: 'cat5',
-    description: 'Kit UI complet pour tableaux de bord.',
-    shortDescription: 'Dashboard UI Kit professionnel.',
-    version: '1.0.0',
-    features: ['100+ composants', 'Dark mode', 'Responsive'],
-    tags: ['figma', 'dashboard', 'ui-kit'],
-    filesIncluded: ['Figma'],
-    vendor: { id: 'vendor-2', name: 'FigmaDesigns', email: 'team@figmadesigns.com' },
-  },
-  {
-    id: 'a2',
-    title: 'E-commerce Funnel Pack',
-    slug: 'ecommerce-funnel-pack',
-    image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=200&h=150&fit=crop',
-    price: 149,
-    sales: 0,
-    revenue: 0,
-    status: 'rejected',
-    rating: 0,
-    views: 0,
-    createdAt: '2024-01-12',
-    submittedAt: '2024-01-12',
-    category: 'Funnels',
-    categoryId: 'cat6',
-    description: 'Pack complet de funnels e-commerce.',
-    shortDescription: 'Funnels de vente e-commerce.',
-    version: '1.0.0',
-    features: ['5 funnels', 'Pages de vente', 'Upsells'],
-    tags: ['funnel', 'ecommerce', 'sales'],
-    filesIncluded: ['HTML', 'CSS'],
-    rejectionReason: 'Qualité des fichiers insuffisante. Veuillez améliorer les images de prévisualisation.',
-    vendor: { id: 'vendor-3', name: 'FunnelMasters', email: 'hello@funnelmasters.io' },
-  },
-  {
-    id: 'a3',
-    title: 'ShopifyPro - Thème E-commerce Premium',
-    slug: 'shopifypro-ecommerce',
-    image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&h=150&fit=crop',
-    price: 149,
-    sales: 0,
-    revenue: 0,
-    status: 'pending',
-    rating: 0,
-    views: 0,
-    createdAt: '2024-01-18',
-    submittedAt: '2024-01-18',
-    category: 'Shopify',
-    categoryId: 'cat2',
-    description: 'Thème Shopify premium pour boutiques e-commerce.',
-    shortDescription: 'Thème Shopify moderne et optimisé.',
-    version: '1.0.0',
-    features: ['Responsive', 'Fast', 'SEO ready'],
-    tags: ['shopify', 'ecommerce', 'theme'],
-    filesIncluded: ['Liquid', 'CSS', 'JavaScript'],
-    vendor: { id: 'vendor-4', name: 'ShopifyExperts', email: 'support@shopifyexperts.com' },
-  },
-  {
-    id: 'a4',
-    title: 'SystemePro - Tunnel de Vente',
-    slug: 'systemepro-tunnel',
-    image: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=200&h=150&fit=crop',
-    price: 97,
-    sales: 45,
-    revenue: 3706,
-    status: 'suspended',
-    rating: 4.2,
-    views: 1890,
-    createdAt: '2023-12-20',
-    submittedAt: '2023-12-15',
-    category: 'Systeme.io',
-    categoryId: 'cat3',
-    description: 'Tunnel de vente complet pour Systeme.io.',
-    shortDescription: 'Tunnel de vente optimisé.',
-    version: '2.0.0',
-    features: ['Pages de capture', 'Séquence email', 'Checkout'],
-    tags: ['systeme.io', 'funnel', 'sales'],
-    filesIncluded: ['HTML', 'CSS'],
-    rejectionReason: 'Produit suspendu suite à plusieurs plaintes clients.',
-    vendor: { id: 'vendor-5', name: 'FunnelExperts', email: 'team@funnelexperts.com' },
-  },
-  {
-    id: 'a5',
-    title: 'CoachingFunnel - Pack Coach Systeme.io',
-    slug: 'coachingfunnel-pack-coach',
-    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=200&h=150&fit=crop',
-    price: 127,
-    sales: 0,
-    revenue: 0,
-    status: 'pending',
-    rating: 0,
-    views: 0,
-    createdAt: '2024-01-19',
-    submittedAt: '2024-01-19',
-    category: 'Systeme.io',
-    categoryId: 'cat3',
-    description: 'Pack complet pour coachs sur Systeme.io.',
-    shortDescription: 'Tout pour lancer votre activité de coaching.',
-    version: '1.0.0',
-    features: ['Tunnel complet', 'Espace membre', 'Emails'],
-    tags: ['coaching', 'systeme.io', 'formation'],
-    filesIncluded: ['HTML', 'CSS'],
-    vendor: { id: 'vendor-5', name: 'FunnelExperts', email: 'team@funnelexperts.com' },
-  },
-  {
-    id: 'a6',
-    title: 'FashionStore - Thème Mode Shopify',
-    slug: 'fashionstore-shopify',
-    image: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=200&h=150&fit=crop',
-    price: 159,
-    sales: 0,
-    revenue: 0,
-    status: 'pending',
-    rating: 0,
-    views: 0,
-    createdAt: '2024-01-20',
-    submittedAt: '2024-01-20',
-    category: 'Shopify',
-    categoryId: 'cat2',
-    description: 'Thème Shopify spécialisé mode et fashion.',
-    shortDescription: 'Thème élégant pour boutiques de mode.',
-    version: '1.0.0',
-    features: ['Lookbook', 'Quick view', 'Wishlist'],
-    tags: ['shopify', 'fashion', 'mode'],
-    filesIncluded: ['Liquid', 'CSS', 'JavaScript'],
-    vendor: { id: 'vendor-4', name: 'ShopifyExperts', email: 'support@shopifyexperts.com' },
-  },
-  {
-    id: 'a7',
-    title: 'EmailPro - Collection Templates Email',
-    slug: 'emailpro-templates',
-    image: 'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=200&h=150&fit=crop',
-    price: 29,
-    sales: 234,
-    revenue: 5746,
-    status: 'active',
-    rating: 4.9,
-    views: 4520,
-    createdAt: '2023-11-15',
-    submittedAt: '2023-11-10',
-    category: 'Email',
-    categoryId: 'cat7',
-    description: 'Collection de templates email professionnels.',
-    shortDescription: '50+ templates email responsive.',
-    version: '3.0.0',
-    features: ['50+ templates', 'Compatible tous clients', 'Responsive'],
-    tags: ['email', 'newsletter', 'marketing'],
-    filesIncluded: ['HTML', 'CSS'],
-    vendor: { id: 'vendor-6', name: 'DesignHub', email: 'hello@designhub.io' },
-  },
-]
+// Mapper le statut du frontend vers l'API
+const mapStatusToApi = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    'active': 'APPROVED',
+    'pending': 'PENDING_REVIEW',
+    'rejected': 'REJECTED',
+    'suspended': 'ARCHIVED',
+    'draft': 'DRAFT',
+  }
+  return statusMap[status] || status.toUpperCase()
+}
 
-export const useProductsStore = create<ProductsState>()(
-  persist(
-    (set, get) => ({
-      products: initialProducts,
+export const useProductsStore = create<ProductsState>()((set, get) => ({
+  products: [],
+  isLoading: false,
+  error: null,
+  lastFetch: null,
+
+  fetchProducts: async (filters) => {
+    set({ isLoading: true, error: null })
+    
+    try {
+      const params = new URLSearchParams()
+      if (filters?.status) params.append('status', mapStatusToApi(filters.status))
+      if (filters?.vendorId) params.append('vendorId', filters.vendorId)
+      if (filters?.category) params.append('category', filters.category)
       
-      addProduct: (product) => {
-        const newProduct: Product = {
-          ...product,
-          id: `prod-${Date.now()}`,
-          slug: generateSlug(product.title),
-          sales: 0,
-          revenue: 0,
-          rating: 0,
-          views: 0,
-          createdAt: new Date().toISOString().split('T')[0],
-          submittedAt: new Date().toISOString().split('T')[0],
-        }
-        set({ products: [newProduct, ...get().products] })
-      },
+      const url = `/api/products${params.toString() ? `?${params}` : ''}`
+      const response = await fetch(url)
       
-      updateProduct: (id, updates) => {
-        set({
-          products: get().products.map((p) =>
-            p.id === id ? { ...p, ...updates } : p
-          ),
-        })
-      },
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des produits')
+      }
       
-      deleteProduct: (id) => {
-        set({ products: get().products.filter((p) => p.id !== id) })
-      },
+      const data = await response.json()
       
-      approveProduct: (id) => {
-        set({
-          products: get().products.map((p) =>
-            p.id === id
-              ? { ...p, status: 'active' as const, rejectionReason: undefined }
-              : p
-          ),
-        })
-      },
+      // Transformer les produits
+      const products = data.products.map((p: any) => ({
+        ...p,
+        status: mapStatus(p.status),
+        sales: p.sales || 0,
+        revenue: (p.sales || 0) * p.price,
+        image: p.image || p.images?.[0] || '',
+      }))
       
-      rejectProduct: (id, reason) => {
-        set({
-          products: get().products.map((p) =>
-            p.id === id
-              ? { ...p, status: 'rejected' as const, rejectionReason: reason }
-              : p
-          ),
-        })
-      },
-      
-      suspendProduct: (id) => {
-        set({
-          products: get().products.map((p) =>
-            p.id === id ? { ...p, status: 'suspended' as const } : p
-          ),
-        })
-      },
-      
-      reactivateProduct: (id) => {
-        set({
-          products: get().products.map((p) =>
-            p.id === id
-              ? { ...p, status: 'active' as const, rejectionReason: undefined }
-              : p
-          ),
-        })
-      },
-      
-      submitProduct: (id) => {
-        set({
-          products: get().products.map((p) =>
-            p.id === id
-              ? {
-                  ...p,
-                  status: 'pending' as const,
-                  submittedAt: new Date().toISOString().split('T')[0],
-                  rejectionReason: undefined,
-                }
-              : p
-          ),
-        })
-      },
-      
-      resubmitProduct: (id) => {
-        set({
-          products: get().products.map((p) =>
-            p.id === id
-              ? {
-                  ...p,
-                  status: 'pending' as const,
-                  submittedAt: new Date().toISOString().split('T')[0],
-                  rejectionReason: undefined,
-                }
-              : p
-          ),
-        })
-      },
-      
-      saveDraft: (product) => {
-        const newProduct: Product = {
-          ...product,
-          id: `draft-${Date.now()}`,
-          slug: generateSlug(product.title || 'brouillon'),
-          sales: 0,
-          revenue: 0,
-          rating: 0,
-          views: 0,
-          createdAt: new Date().toISOString().split('T')[0],
-          status: 'draft',
-        }
-        set({ products: [newProduct, ...get().products] })
-      },
-      
-      getVendorProducts: (vendorId) => {
-        return get().products.filter((p) => p.vendor.id === vendorId)
-      },
-      
-      getPendingProducts: () => {
-        return get().products.filter((p) => p.status === 'pending')
-      },
-    }),
-    {
-      name: 'products-storage',
+      set({ products, isLoading: false, lastFetch: Date.now() })
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Erreur inconnue', 
+        isLoading: false 
+      })
     }
-  )
-)
+  },
 
+  fetchProduct: async (idOrSlug) => {
+    try {
+      const response = await fetch(`/api/products/${idOrSlug}`)
+      
+      if (!response.ok) {
+        return null
+      }
+      
+      const data = await response.json()
+      const product = {
+        ...data.product,
+        status: mapStatus(data.product.status),
+        sales: data.product.sales || 0,
+        revenue: (data.product.sales || 0) * data.product.price,
+        image: data.product.image || data.product.images?.[0] || '',
+      }
+      
+      return product
+    } catch {
+      return null
+    }
+  },
 
+  createProduct: async (productData) => {
+    try {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...productData,
+          status: productData.status ? mapStatusToApi(productData.status) : undefined,
+        }),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Erreur lors de la création' }
+      }
+      
+      // Rafraîchir la liste
+      await get().fetchProducts()
+      
+      return { success: true, product: data.product }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  updateProduct: async (id, updates) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Erreur lors de la mise à jour' }
+      }
+      
+      // Mettre à jour localement
+      set({
+        products: get().products.map(p => 
+          p.id === id ? { ...p, ...updates } : p
+        )
+      })
+      
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  deleteProduct: async (id) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        return { success: false, error: data.error || 'Erreur lors de la suppression' }
+      }
+      
+      // Supprimer localement
+      set({
+        products: get().products.filter(p => p.id !== id)
+      })
+      
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  approveProduct: async (id) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        return { success: false, error: data.error }
+      }
+      
+      // Mettre à jour localement
+      set({
+        products: get().products.map(p => 
+          p.id === id ? { ...p, status: 'active' as const, rejectionReason: null } : p
+        )
+      })
+      
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  rejectProduct: async (id, reason) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject', reason }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        return { success: false, error: data.error }
+      }
+      
+      set({
+        products: get().products.map(p => 
+          p.id === id ? { ...p, status: 'rejected' as const, rejectionReason: reason } : p
+        )
+      })
+      
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  suspendProduct: async (id) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'suspend' }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        return { success: false, error: data.error }
+      }
+      
+      set({
+        products: get().products.map(p => 
+          p.id === id ? { ...p, status: 'suspended' as const } : p
+        )
+      })
+      
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  reactivateProduct: async (id) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reactivate' }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        return { success: false, error: data.error }
+      }
+      
+      set({
+        products: get().products.map(p => 
+          p.id === id ? { ...p, status: 'active' as const, rejectionReason: null } : p
+        )
+      })
+      
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  submitProduct: async (id) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'submit' }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        return { success: false, error: data.error }
+      }
+      
+      set({
+        products: get().products.map(p => 
+          p.id === id ? { ...p, status: 'pending' as const, submittedAt: new Date().toISOString() } : p
+        )
+      })
+      
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  resubmitProduct: async (id) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resubmit' }),
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        return { success: false, error: data.error }
+      }
+      
+      set({
+        products: get().products.map(p => 
+          p.id === id ? { ...p, status: 'pending' as const, rejectionReason: null } : p
+        )
+      })
+      
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erreur inconnue' 
+      }
+    }
+  },
+
+  getVendorProducts: (vendorId) => {
+    return get().products.filter(p => p.vendor.id === vendorId || p.vendor.userId === vendorId)
+  },
+
+  getPendingProducts: () => {
+    return get().products.filter(p => p.status === 'pending' || p.status === 'pending-review')
+  },
+
+  getActiveProducts: () => {
+    return get().products.filter(p => p.status === 'active' || p.status === 'approved')
+  },
+
+  getProductBySlug: (slug) => {
+    return get().products.find(p => p.slug === slug)
+  },
+}))

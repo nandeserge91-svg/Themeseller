@@ -92,12 +92,13 @@ export default function CategoriePage() {
   const [isHydrated, setIsHydrated] = useState(false)
 
   // Récupérer les produits depuis le store
-  const { products: storeProducts } = useProductsStore()
+  const { products: storeProducts, isLoading, fetchProducts } = useProductsStore()
   
-  // Hydratation côté client
+  // Charger les produits depuis l'API
   useEffect(() => {
     setIsHydrated(true)
-  }, [])
+    fetchProducts({ status: 'active', category: slug }) // Charger les produits de cette catégorie
+  }, [fetchProducts, slug])
 
   // Transformer les produits du store pour l'affichage
   const allProducts = useMemo(() => {
@@ -154,8 +155,8 @@ export default function CategoriePage() {
     return result
   }, [slug, searchQuery, selectedSort])
 
-  // Afficher un loader pendant l'hydratation
-  if (!isHydrated) {
+  // Afficher un loader pendant le chargement
+  if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
