@@ -23,7 +23,7 @@ export default function ConfidentialitePage() {
         <div className="card p-8 prose prose-gray max-w-none">
           <h2>1. Introduction</h2>
           <p>
-            ThemePro (ci-après "nous") s'engage à protéger la vie privée des utilisateurs de 
+            Themeseller (ci-après "nous") s'engage à protéger la vie privée des utilisateurs de 
             sa plateforme. Cette politique de confidentialité explique comment nous collectons, 
             utilisons et protégeons vos données personnelles.
           </p>

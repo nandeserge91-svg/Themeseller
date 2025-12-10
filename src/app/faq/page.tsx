@@ -11,11 +11,11 @@ const faqCategories = [
     name: 'Général',
     questions: [
       {
-        q: "Qu'est-ce que ThemePro ?",
-        a: "ThemePro est une marketplace francophone qui propose des thèmes, templates et tunnels de vente premium créés par des designers et développeurs talentueux. Nous offrons une large sélection de produits de qualité pour tous types de projets web."
+        q: "Qu'est-ce que Themeseller ?",
+        a: "Themeseller est une marketplace francophone qui propose des thèmes, templates et tunnels de vente premium créés par des designers et développeurs talentueux. Nous offrons une large sélection de produits de qualité pour tous types de projets web."
       },
       {
-        q: "Comment fonctionne ThemePro ?",
+        q: "Comment fonctionne Themeseller ?",
         a: "C'est simple ! Parcourez notre catalogue, choisissez les templates qui vous intéressent, ajoutez-les au panier et procédez au paiement. Après l'achat, vous pouvez télécharger immédiatement vos fichiers depuis votre espace client."
       },
       {
@@ -62,12 +62,12 @@ const faqCategories = [
     name: 'Vendeurs',
     questions: [
       {
-        q: "Comment devenir vendeur sur ThemePro ?",
+        q: "Comment devenir vendeur sur Themeseller ?",
         a: "Créez un compte, puis accédez à la page 'Devenir vendeur' pour compléter votre profil. Une fois validé, vous pourrez publier vos templates."
       },
       {
-        q: "Quelle est la commission de ThemePro ?",
-        a: "ThemePro prélève une commission de 15% sur chaque vente. Vous conservez 85% du prix de vente."
+        q: "Quelle est la commission de Themeseller ?",
+        a: "Themeseller prélève une commission de 15% sur chaque vente. Vous conservez 85% du prix de vente."
       },
       {
         q: "Quand suis-je payé ?",

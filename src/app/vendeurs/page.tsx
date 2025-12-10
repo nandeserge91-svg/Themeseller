@@ -65,7 +65,7 @@ export default function VendeursPage() {
             Nos Vendeurs
           </h1>
           <p className="text-xl text-white/80 max-w-2xl mx-auto mb-8">
-            Découvrez les créateurs talentueux qui proposent leurs templates sur ThemePro
+            Découvrez les créateurs talentueux qui proposent leurs templates sur Themeseller
           </p>
 
           {/* Search */}

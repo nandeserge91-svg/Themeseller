@@ -37,7 +37,7 @@ const jobs = [
     department: 'Support',
     location: 'Remote',
     type: 'CDI',
-    description: 'Accompagnez nos vendeurs et clients pour maximiser leur succès sur ThemePro.',
+    description: 'Accompagnez nos vendeurs et clients pour maximiser leur succès sur Themeseller.',
   },
   {
     id: '5',
@@ -87,7 +87,7 @@ export default function CarrieresPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-display font-bold text-white mb-6"
           >
-            Rejoignez l'aventure ThemePro
+            Rejoignez l'aventure Themeseller
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -118,7 +118,7 @@ export default function CarrieresPage() {
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Notre culture</h2>
               <div className="space-y-4 text-gray-600">
                 <p>
-                  Chez ThemePro, nous croyons que les meilleures idées viennent d'équipes 
+                  Chez Themeseller, nous croyons que les meilleures idées viennent d'équipes 
                   diversifiées et passionnées. Nous cultivons un environnement où chacun 
                   peut s'épanouir et contribuer à notre mission.
                 </p>
@@ -132,7 +132,7 @@ export default function CarrieresPage() {
             <div className="relative h-80 rounded-2xl overflow-hidden">
               <Image
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop"
-                alt="L'équipe ThemePro"
+                alt="L'équipe Themeseller"
                 fill
                 className="object-cover"
               />

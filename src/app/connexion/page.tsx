@@ -110,7 +110,7 @@ export default function ConnexionPage() {
           <p className="text-gray-600 mt-2">
             {isLogin 
               ? 'Connectez-vous pour accéder à votre compte' 
-              : 'Rejoignez ThemePro et découvrez des templates premium'}
+              : 'Rejoignez Themeseller et découvrez des templates premium'}
           </p>
         </div>
 

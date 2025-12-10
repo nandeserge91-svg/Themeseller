@@ -101,7 +101,7 @@ export default function Header() {
                 <span className="text-white font-bold text-lg">T</span>
               </div>
               <span className="font-display font-bold text-xl text-gray-900">
-                Theme<span className="gradient-text">Pro</span>
+                Theme<span className="gradient-text">seller</span>
               </span>
             </Link>
 

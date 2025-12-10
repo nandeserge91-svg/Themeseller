@@ -81,7 +81,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       try {
         await navigator.share({
           title: product.title,
-          text: `Découvrez ${product.title} sur ThemePro`,
+          text: `Découvrez ${product.title} sur Themeseller`,
           url: shareUrl,
         })
       } catch (err) {

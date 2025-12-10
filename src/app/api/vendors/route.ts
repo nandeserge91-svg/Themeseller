@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         slug: v.slug,
         avatar: v.logo || v.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(v.storeName)}&background=6366f1&color=fff`,
         banner: v.banner || 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=800&h=300&fit=crop',
-        bio: v.bio || 'Vendeur sur ThemePro',
+        bio: v.bio || 'Vendeur sur Themeseller',
         rating: Math.round(avgRating * 10) / 10,
         reviewCount: totalReviews,
         totalSales: totalSales,

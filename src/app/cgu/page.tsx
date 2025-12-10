@@ -24,7 +24,7 @@ export default function CGUPage() {
           <h2>1. Objet</h2>
           <p>
             Les présentes Conditions Générales d'Utilisation (ci-après "CGU") ont pour objet de définir 
-            les modalités et conditions d'utilisation de la plateforme ThemePro (ci-après "la Plateforme"), 
+            les modalités et conditions d'utilisation de la plateforme Themeseller (ci-après "la Plateforme"), 
             ainsi que les droits et obligations des utilisateurs.
           </p>
 
@@ -37,7 +37,7 @@ export default function CGUPage() {
 
           <h2>3. Description des services</h2>
           <p>
-            ThemePro est une marketplace permettant :
+            Themeseller est une marketplace permettant :
           </p>
           <ul>
             <li>Aux acheteurs d'acquérir des templates, thèmes et tunnels de vente numériques</li>
@@ -65,8 +65,8 @@ export default function CGUPage() {
 
           <h2>6. Responsabilités</h2>
           <p>
-            ThemePro s'efforce d'assurer la disponibilité de la Plateforme mais ne peut garantir 
-            un accès ininterrompu. ThemePro n'est pas responsable des contenus publiés par les 
+            Themeseller s'efforce d'assurer la disponibilité de la Plateforme mais ne peut garantir 
+            un accès ininterrompu. Themeseller n'est pas responsable des contenus publiés par les 
             vendeurs ni des transactions entre utilisateurs.
           </p>
 
@@ -78,7 +78,7 @@ export default function CGUPage() {
 
           <h2>8. Modification des CGU</h2>
           <p>
-            ThemePro se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs 
+            Themeseller se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs 
             seront informés des modifications par email ou notification sur la Plateforme.
           </p>
 

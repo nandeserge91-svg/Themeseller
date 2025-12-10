@@ -328,7 +328,7 @@ export default function HomePage() {
                 Devenez vendeur et monétisez vos créations
               </h2>
               <p className="text-xl text-white/80 max-w-xl">
-                Rejoignez plus de 12 000 designers et développeurs qui vendent leurs templates sur ThemePro
+                Rejoignez plus de 12 000 designers et développeurs qui vendent leurs templates sur Themeseller
               </p>
               <ul className="flex flex-wrap justify-center lg:justify-start gap-6 mt-6 text-white/90">
                 <li className="flex items-center gap-2">
@@ -387,7 +387,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="section-title mb-4">
-              Pourquoi choisir ThemePro ?
+              Pourquoi choisir Themeseller ?
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               Une expérience d'achat premium avec des garanties qui font la différence
@@ -441,13 +441,13 @@ export default function HomePage() {
                 avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
               },
               {
-                quote: "En tant que vendeur, ThemePro m'a permis de multiplier mes revenus par 3. L'audience francophone est vraiment au rendez-vous.",
+                quote: "En tant que vendeur, Themeseller m'a permis de multiplier mes revenus par 3. L'audience francophone est vraiment au rendez-vous.",
                 author: 'Pierre Martin',
                 role: 'Designer Freelance',
                 avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
               },
               {
-                quote: "Les tunnels de vente disponibles sur ThemePro m'ont fait gagner des semaines de travail. ROI instantané !",
+                quote: "Les tunnels de vente disponibles sur Themeseller m'ont fait gagner des semaines de travail. ROI instantané !",
                 author: 'Sophie Bernard',
                 role: 'Marketing Manager',
                 avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',

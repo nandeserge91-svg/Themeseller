@@ -65,7 +65,7 @@ const articles = [
   {
     id: '6',
     slug: 'devenir-vendeur-themepro',
-    title: 'Comment devenir vendeur sur ThemePro et générer des revenus passifs',
+    title: 'Comment devenir vendeur sur Themeseller et générer des revenus passifs',
     excerpt: 'Toutes les étapes pour créer et vendre vos templates sur notre marketplace.',
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=500&fit=crop',
     author: 'Pierre Martin',
@@ -88,7 +88,7 @@ export default function BlogPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-display font-bold text-white mb-4"
           >
-            Blog ThemePro
+            Blog Themeseller
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}

@@ -41,7 +41,7 @@ export default function SignalerPage() {
               Signaler un problème
             </h1>
             <p className="text-white/80">
-              Aidez-nous à maintenir ThemePro sûr et respectueux
+              Aidez-nous à maintenir Themeseller sûr et respectueux
             </p>
           </motion.div>
         </div>

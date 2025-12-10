@@ -86,7 +86,7 @@ export default function Footer() {
                 <span className="text-white font-bold text-lg">T</span>
               </div>
               <span className="font-display font-bold text-xl">
-                Theme<span className="text-primary-400">Pro</span>
+                Theme<span className="text-primary-400">seller</span>
               </span>
             </Link>
             <p className="text-gray-400 text-sm mb-6">
@@ -177,7 +177,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} ThemePro. Tous droits réservés.
+            © {new Date().getFullYear()} Themeseller. Tous droits réservés.
           </p>
           <div className="flex items-center gap-4">
             {socialLinks.map((social) => (

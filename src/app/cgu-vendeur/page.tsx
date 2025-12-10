@@ -23,8 +23,8 @@ export default function CGUVendeurPage() {
         <div className="card p-8 prose prose-gray max-w-none">
           <h2>1. Devenir vendeur</h2>
           <p>
-            Pour devenir vendeur sur ThemePro, vous devez créer un compte et soumettre une demande 
-            d'inscription au programme vendeur. ThemePro se réserve le droit d'accepter ou de refuser 
+            Pour devenir vendeur sur Themeseller, vous devez créer un compte et soumettre une demande 
+            d'inscription au programme vendeur. Themeseller se réserve le droit d'accepter ou de refuser 
             toute demande à sa seule discrétion.
           </p>
 
@@ -59,7 +59,7 @@ export default function CGUVendeurPage() {
           <h2>4. Tarification et commissions</h2>
           <p>
             Le vendeur fixe librement le prix de ses produits dans le respect des prix minimums 
-            définis par ThemePro. Une commission de 15% est prélevée sur chaque vente.
+            définis par Themeseller. Une commission de 15% est prélevée sur chaque vente.
           </p>
           <table className="w-full">
             <thead>
@@ -93,28 +93,28 @@ export default function CGUVendeurPage() {
 
           <h2>6. Fiscalité</h2>
           <p>
-            Le vendeur est seul responsable de ses obligations fiscales et sociales. ThemePro 
+            Le vendeur est seul responsable de ses obligations fiscales et sociales. Themeseller 
             transmet les informations requises aux autorités fiscales conformément à la législation 
             en vigueur.
           </p>
 
           <h2>7. Propriété intellectuelle</h2>
           <p>
-            En publiant un produit sur ThemePro, le vendeur garantit détenir tous les droits 
-            nécessaires. Le vendeur accorde à ThemePro une licence non-exclusive pour afficher 
+            En publiant un produit sur Themeseller, le vendeur garantit détenir tous les droits 
+            nécessaires. Le vendeur accorde à Themeseller une licence non-exclusive pour afficher 
             et promouvoir ses produits sur la plateforme.
           </p>
 
           <h2>8. Résiliation</h2>
           <p>
-            Le vendeur peut fermer son compte à tout moment. ThemePro peut suspendre ou résilier 
+            Le vendeur peut fermer son compte à tout moment. Themeseller peut suspendre ou résilier 
             un compte vendeur en cas de violation des présentes conditions, sans préavis ni 
             indemnité.
           </p>
 
           <h2>9. Modification des conditions</h2>
           <p>
-            ThemePro se réserve le droit de modifier ces conditions à tout moment. Les vendeurs 
+            Themeseller se réserve le droit de modifier ces conditions à tout moment. Les vendeurs 
             seront notifiés par email au moins 30 jours avant l'entrée en vigueur des modifications.
           </p>
 

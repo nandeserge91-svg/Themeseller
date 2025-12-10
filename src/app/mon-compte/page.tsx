@@ -241,7 +241,7 @@ export default function MonComptePage() {
               <div className="card p-6 bg-gradient-to-br from-primary-600 to-secondary-600 text-white">
                 <h3 className="text-lg font-semibold mb-2">Devenez vendeur</h3>
                 <p className="text-white/80 text-sm mb-4">
-                  Vendez vos créations et gagnez de l'argent sur ThemePro
+                  Vendez vos créations et gagnez de l'argent sur Themeseller
                 </p>
                 <Link href="/devenir-vendeur">
                   <Button variant="accent" className="w-full">

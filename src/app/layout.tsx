@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
-  title: 'ThemePro - Marketplace de Thèmes & Templates Premium',
+  title: 'Themeseller - Marketplace de Thèmes & Templates Premium',
   description: 'Découvrez des milliers de thèmes WordPress, templates HTML, designs Figma et tunnels de vente créés par des designers talentueux.',
   keywords: ['thèmes wordpress', 'templates html', 'figma', 'tunnels de vente', 'marketplace'],
 }

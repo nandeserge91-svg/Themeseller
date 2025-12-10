@@ -70,7 +70,7 @@ export default function AProposPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-display font-bold text-white mb-6"
           >
-            À propos de ThemePro
+            À propos de Themeseller
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -117,13 +117,13 @@ export default function AProposPage() {
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Notre Histoire</h2>
               <div className="space-y-4 text-gray-600">
                 <p>
-                  ThemePro est né en 2020 d'une vision simple : créer la marketplace de référence 
+                  Themeseller est né en 2020 d'une vision simple : créer la marketplace de référence 
                   pour le marché francophone. Face à la domination des plateformes anglophones, 
                   nous avons voulu offrir une alternative locale, adaptée aux besoins spécifiques 
                   de notre communauté.
                 </p>
                 <p>
-                  Aujourd'hui, ThemePro réunit plus de 12 000 créateurs talentueux et sert 
+                  Aujourd'hui, Themeseller réunit plus de 12 000 créateurs talentueux et sert 
                   plus de 500 000 clients dans le monde entier. Notre catalogue compte plus 
                   de 50 000 templates de qualité premium.
                 </p>
@@ -141,7 +141,7 @@ export default function AProposPage() {
             >
               <Image
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop"
-                alt="L'équipe ThemePro"
+                alt="L'équipe Themeseller"
                 fill
                 className="object-cover"
               />
@@ -214,10 +214,10 @@ export default function AProposPage() {
       <section className="py-20 bg-gradient-to-r from-primary-600 to-secondary-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">
-            Rejoignez l'aventure ThemePro
+            Rejoignez l'aventure Themeseller
           </h2>
           <p className="text-white/80 mb-8 text-lg">
-            Que vous soyez créateur ou acheteur, ThemePro est fait pour vous.
+            Que vous soyez créateur ou acheteur, Themeseller est fait pour vous.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/devenir-vendeur">
