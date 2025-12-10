@@ -30,9 +30,6 @@ import { formatPrice } from '@/lib/utils'
 import { useCurrencyStore } from '@/store/currencyStore'
 import { useProductsStore, Product } from '@/store/productsStore'
 
-// ID du vendeur connecté (en démo)
-const CURRENT_VENDOR_ID = 'current-vendor'
-
 const statusConfig: Record<string, { label: string; icon: typeof CheckCircle; color: string; textColor: string }> = {
   active: { label: 'En vente', icon: CheckCircle, color: 'text-accent-600 bg-accent-50', textColor: 'text-accent-700' },
   approved: { label: 'En vente', icon: CheckCircle, color: 'text-accent-600 bg-accent-50', textColor: 'text-accent-700' },
@@ -46,10 +43,11 @@ const statusConfig: Record<string, { label: string; icon: typeof CheckCircle; co
 
 export default function VendeurProduitsPage() {
   const searchParams = useSearchParams()
-  const { products: allProducts, deleteProduct, updateProduct, resubmitProduct, addProduct } = useProductsStore()
+  const { products: allProducts, deleteProduct, updateProduct, resubmitProduct, addProduct, fetchProducts, isLoading } = useProductsStore()
   
-  // Filtrer uniquement les produits du vendeur connecté
-  const products = allProducts.filter(p => p.vendor.id === CURRENT_VENDOR_ID)
+  // En production, on filtrerait par vendeur connecté
+  // Pour la démo, on affiche tous les produits non-brouillons
+  const products = allProducts.filter(p => p.status !== 'draft' || p.vendor?.id)
   
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -61,10 +59,11 @@ export default function VendeurProduitsPage() {
   const menuRef = useRef<HTMLDivElement>(null)
   const { currency } = useCurrencyStore()
 
-  // Hydratation côté client
+  // Charger les produits au montage
   useEffect(() => {
     setIsHydrated(true)
-  }, [])
+    fetchProducts() // Charger tous les produits
+  }, [fetchProducts])
 
   // Mettre à jour le filtre depuis l'URL
   useEffect(() => {
@@ -126,7 +125,7 @@ export default function VendeurProduitsPage() {
       ...product,
       title: `${product.title} (Copie)`,
       status: 'draft',
-      vendor: { id: CURRENT_VENDOR_ID, name: 'Mon Entreprise', email: 'vendeur@demo.com' },
+      // Garder le même vendeur pour la duplication
     })
     setOpenMenuId(null)
     setNotification({ type: 'success', message: 'Produit dupliqué ! Vous pouvez maintenant le modifier.' })

@@ -36,28 +36,29 @@ export async function GET(request: NextRequest) {
     // Construire la requête
     const where: any = {}
 
-    // Filtrer par statut
-    if (status) {
-      // Seuls les admins peuvent voir les non-approuvés
-      if (status !== 'APPROVED' && !isAdmin) {
-        // Les vendeurs peuvent voir leurs propres produits
-        if (vendorId && currentUserId) {
-          where.vendor = { userId: currentUserId }
-        } else {
-          where.status = 'APPROVED'
-        }
-      } else {
-        where.status = status
-      }
-    } else if (!isAdmin) {
-      // Par défaut, les non-admins ne voient que les approuvés
-      where.status = 'APPROVED'
+    // Vérifier si le vendeur appartient à l'utilisateur actuel
+    let isOwnVendor = false
+    if (vendorId && currentUserId) {
+      const vendor = await prisma.vendorProfile.findUnique({
+        where: { id: vendorId },
+        select: { userId: true }
+      })
+      isOwnVendor = vendor?.userId === currentUserId
     }
 
     // Filtrer par vendeur
     if (vendorId) {
       where.vendorId = vendorId
     }
+
+    // Filtrer par statut
+    if (status) {
+      where.status = status
+    } else if (!isAdmin && !isOwnVendor) {
+      // Par défaut, les non-admins et non-propriétaires ne voient que les approuvés
+      where.status = 'APPROVED'
+    }
+    // Admins et propriétaires de vendeur voient tous les statuts
 
     // Filtrer par catégorie
     if (category) {
