@@ -5,8 +5,14 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
+    const dbUrl = process.env.DATABASE_URL || ''
+    
     // Check 1: Is DATABASE_URL set?
-    const hasDbUrl = !!process.env.DATABASE_URL
+    const hasDbUrl = !!dbUrl
+    
+    // Debug: Show first 30 chars of the URL (hiding the password)
+    const urlStart = dbUrl.substring(0, 30)
+    const startsWithPostgres = dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://')
     
     // Check 2: Is database available according to our check?
     const dbAvailable = isDatabaseAvailable
@@ -34,6 +40,12 @@ export async function GET() {
         userCount,
         errorMessage,
       },
+      debug: {
+        urlStart,
+        urlLength: dbUrl.length,
+        startsWithPostgres,
+        firstCharCode: dbUrl.charCodeAt(0),
+      },
       env: {
         nodeEnv: process.env.NODE_ENV,
         hasJwtSecret: !!process.env.JWT_SECRET,
@@ -46,4 +58,5 @@ export async function GET() {
     }, { status: 500 })
   }
 }
+
 
