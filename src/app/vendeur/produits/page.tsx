@@ -33,11 +33,14 @@ import { useProductsStore, Product } from '@/store/productsStore'
 // ID du vendeur connecté (en démo)
 const CURRENT_VENDOR_ID = 'current-vendor'
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; icon: typeof CheckCircle; color: string; textColor: string }> = {
   active: { label: 'En vente', icon: CheckCircle, color: 'text-accent-600 bg-accent-50', textColor: 'text-accent-700' },
+  approved: { label: 'En vente', icon: CheckCircle, color: 'text-accent-600 bg-accent-50', textColor: 'text-accent-700' },
   pending: { label: 'En attente', icon: Clock, color: 'text-warning-600 bg-warning-50', textColor: 'text-warning-700' },
+  'pending-review': { label: 'En attente', icon: Clock, color: 'text-warning-600 bg-warning-50', textColor: 'text-warning-700' },
   rejected: { label: 'Rejeté', icon: XCircle, color: 'text-red-600 bg-red-50', textColor: 'text-red-700' },
   suspended: { label: 'Suspendu', icon: Ban, color: 'text-orange-600 bg-orange-50', textColor: 'text-orange-700' },
+  archived: { label: 'Archivé', icon: Ban, color: 'text-gray-600 bg-gray-100', textColor: 'text-gray-700' },
   draft: { label: 'Brouillon', icon: Edit, color: 'text-gray-600 bg-gray-100', textColor: 'text-gray-700' },
 }
 
@@ -105,7 +108,7 @@ export default function VendeurProduitsPage() {
     suspended: products.filter(p => p.status === 'suspended').length,
     draft: products.filter(p => p.status === 'draft').length,
     totalSales: products.reduce((acc, p) => acc + p.sales, 0),
-    totalRevenue: products.reduce((acc, p) => acc + p.revenue, 0),
+    totalRevenue: products.reduce((acc, p) => acc + (p.revenue || 0), 0),
     totalViews: products.reduce((acc, p) => acc + p.views, 0),
   }
 
@@ -411,7 +414,7 @@ export default function VendeurProduitsPage() {
                           <span className="text-gray-900">{product.sales}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="font-semibold text-gray-900">{formatPrice(product.revenue, currency)}</span>
+                          <span className="font-semibold text-gray-900">{formatPrice(product.revenue || 0, currency)}</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col gap-1">

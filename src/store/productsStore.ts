@@ -1,5 +1,17 @@
 import { create } from 'zustand'
 
+export interface ProductReview {
+  id: string
+  rating: number
+  title?: string
+  comment?: string
+  createdAt: string
+  user: {
+    name: string
+    avatar?: string | null
+  }
+}
+
 export interface Product {
   id: string
   title: string
@@ -31,6 +43,7 @@ export interface Product {
   fileName?: string
   fileSize?: number
   isFeatured?: boolean
+  reviews?: ProductReview[]
   isNew?: boolean
   vendor: {
     id: string
@@ -53,6 +66,10 @@ interface ProductsState {
   createProduct: (product: Partial<Product>) => Promise<{ success: boolean; product?: Product; error?: string }>
   updateProduct: (id: string, updates: Partial<Product>) => Promise<{ success: boolean; error?: string }>
   deleteProduct: (id: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Aliases pour la compatibilité
+  addProduct: (product: Partial<Product>) => Promise<{ success: boolean; product?: Product; error?: string }>
+  saveDraft: (product: Partial<Product>) => Promise<{ success: boolean; product?: Product; error?: string }>
   
   // Actions admin
   approveProduct: (id: string) => Promise<{ success: boolean; error?: string }>
@@ -188,6 +205,16 @@ export const useProductsStore = create<ProductsState>()((set, get) => ({
         error: error instanceof Error ? error.message : 'Erreur inconnue' 
       }
     }
+  },
+
+  // Alias pour addProduct - soumet pour review
+  addProduct: async (productData) => {
+    return get().createProduct({ ...productData, status: 'pending' })
+  },
+
+  // Alias pour saveDraft - sauvegarde comme brouillon
+  saveDraft: async (productData) => {
+    return get().createProduct({ ...productData, status: 'draft' })
   },
 
   updateProduct: async (id, updates) => {

@@ -34,12 +34,14 @@ const mapStatusToAdmin = (status: Product['status']): AdminStatus => {
   return status as AdminStatus
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; icon: typeof CheckCircle; color: string }> = {
   approved: { label: 'Approuvé', icon: CheckCircle, color: 'text-accent-600 bg-accent-50' },
   active: { label: 'Approuvé', icon: CheckCircle, color: 'text-accent-600 bg-accent-50' },
   pending: { label: 'En attente', icon: Clock, color: 'text-warning-600 bg-warning-50' },
+  'pending-review': { label: 'En attente', icon: Clock, color: 'text-warning-600 bg-warning-50' },
   rejected: { label: 'Rejeté', icon: XCircle, color: 'text-red-600 bg-red-50' },
   suspended: { label: 'Suspendu', icon: Ban, color: 'text-orange-600 bg-orange-50' },
+  archived: { label: 'Archivé', icon: Ban, color: 'text-gray-600 bg-gray-100' },
   draft: { label: 'Brouillon', icon: FileText, color: 'text-gray-600 bg-gray-100' },
 }
 

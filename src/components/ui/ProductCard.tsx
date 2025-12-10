@@ -17,7 +17,7 @@ interface ProductCardProps {
     title: string
     slug: string
     price: number
-    salePrice?: number
+    salePrice?: number | null
     images: string[]
     averageRating: number
     reviewCount: number
@@ -49,7 +49,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     title: product.title,
     slug: product.slug,
     price: product.price,
-    salePrice: product.salePrice,
+    salePrice: product.salePrice ?? undefined,
     image: product.images[0],
     vendorName: product.vendorName,
     vendorId: product.vendorId,

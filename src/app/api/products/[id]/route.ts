@@ -68,7 +68,7 @@ export async function GET(
         return NextResponse.json({ error: 'Produit non disponible' }, { status: 403 })
       }
 
-      const user = verifyToken(token)
+      const user = await verifyToken(token)
       if (!user) {
         return NextResponse.json({ error: 'Produit non disponible' }, { status: 403 })
       }
@@ -169,7 +169,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
 
-    const user = verifyToken(token)
+    const user = await verifyToken(token)
     if (!user) {
       return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
     }
@@ -290,7 +290,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
 
-    const user = verifyToken(token)
+    const user = await verifyToken(token)
     if (!user) {
       return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
     }

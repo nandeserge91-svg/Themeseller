@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     let currentUserId: string | null = null
 
     if (token) {
-      const user = verifyToken(token)
+      const user = await verifyToken(token)
       if (user) {
         isAdmin = user.role === 'ADMIN'
         currentUserId = user.id
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
 
-    const user = verifyToken(token)
+    const user = await verifyToken(token)
     if (!user) {
       return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
     }
