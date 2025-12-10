@@ -146,23 +146,88 @@ async function main() {
 
   console.log('✅ Vendeur créé:', vendor.email)
 
-  // Créer des produits démo
+  // Créer des produits démo avec descriptions complètes
   const products = await Promise.all([
     prisma.product.upsert({
       where: { slug: 'saasify-admin-dashboard' },
-      update: {},
+      update: {
+        shortDescription: 'Un dashboard admin moderne et complet pour vos applications SaaS, avec plus de 100 composants et 50 pages prêtes à l\'emploi.',
+        description: `<h2>Présentation</h2>
+<p>SaaSify est un template admin dashboard premium conçu pour les applications SaaS modernes. Avec son design épuré et ses nombreuses fonctionnalités, il vous permettra de créer rapidement des interfaces d'administration professionnelles.</p>
+
+<h2>Caractéristiques principales</h2>
+<ul>
+  <li>Plus de 100 composants UI personnalisables</li>
+  <li>50+ pages prêtes à l'emploi</li>
+  <li>Design responsive adapté à tous les écrans</li>
+  <li>Mode sombre inclus</li>
+  <li>Graphiques et visualisations de données</li>
+  <li>Système d'authentification complet</li>
+  <li>Tables de données avancées</li>
+  <li>Formulaires avec validation</li>
+</ul>
+
+<h2>Technologies utilisées</h2>
+<p>Ce template utilise les dernières technologies web pour garantir des performances optimales :</p>
+<ul>
+  <li>React 18 avec TypeScript</li>
+  <li>Next.js 14 (App Router)</li>
+  <li>Tailwind CSS</li>
+  <li>Framer Motion pour les animations</li>
+  <li>Chart.js pour les graphiques</li>
+</ul>
+
+<h2>Support et mises à jour</h2>
+<p>Vous bénéficiez de 6 mois de support technique et de mises à jour gratuites. Notre équipe est disponible pour répondre à toutes vos questions.</p>`,
+        images: [
+          'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=1200&h=800&fit=crop',
+        ],
+        features: ['100+ Composants UI', '50+ Pages prêtes', 'Mode Sombre', 'Responsive Design', 'Documentation complète', 'Support 6 mois'],
+      },
       create: {
         title: 'SaaSify - Template Admin Dashboard Premium',
         slug: 'saasify-admin-dashboard',
-        shortDescription: 'Un dashboard admin moderne et complet pour vos applications SaaS.',
-        description: '<h2>Présentation</h2><p>SaaSify est un template admin dashboard premium...</p>',
+        shortDescription: 'Un dashboard admin moderne et complet pour vos applications SaaS, avec plus de 100 composants et 50 pages prêtes à l\'emploi.',
+        description: `<h2>Présentation</h2>
+<p>SaaSify est un template admin dashboard premium conçu pour les applications SaaS modernes. Avec son design épuré et ses nombreuses fonctionnalités, il vous permettra de créer rapidement des interfaces d'administration professionnelles.</p>
+
+<h2>Caractéristiques principales</h2>
+<ul>
+  <li>Plus de 100 composants UI personnalisables</li>
+  <li>50+ pages prêtes à l'emploi</li>
+  <li>Design responsive adapté à tous les écrans</li>
+  <li>Mode sombre inclus</li>
+  <li>Graphiques et visualisations de données</li>
+  <li>Système d'authentification complet</li>
+  <li>Tables de données avancées</li>
+  <li>Formulaires avec validation</li>
+</ul>
+
+<h2>Technologies utilisées</h2>
+<p>Ce template utilise les dernières technologies web pour garantir des performances optimales :</p>
+<ul>
+  <li>React 18 avec TypeScript</li>
+  <li>Next.js 14 (App Router)</li>
+  <li>Tailwind CSS</li>
+  <li>Framer Motion pour les animations</li>
+  <li>Chart.js pour les graphiques</li>
+</ul>
+
+<h2>Support et mises à jour</h2>
+<p>Vous bénéficiez de 6 mois de support technique et de mises à jour gratuites. Notre équipe est disponible pour répondre à toutes vos questions.</p>`,
         price: 79,
         salePrice: 59,
-        images: ['https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop'],
+        images: [
+          'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=1200&h=800&fit=crop',
+        ],
         mainFile: '/uploads/saasify.zip',
         version: '2.5.0',
         filesIncluded: ['HTML', 'CSS', 'JavaScript', 'TypeScript'],
-        features: ['100+ Composants', '50+ Pages', 'Mode Sombre', 'Responsive'],
+        features: ['100+ Composants UI', '50+ Pages prêtes', 'Mode Sombre', 'Responsive Design', 'Documentation complète', 'Support 6 mois'],
         tags: ['Dashboard', 'Admin', 'SaaS', 'React'],
         downloads: 3420,
         views: 15680,
@@ -178,19 +243,76 @@ async function main() {
     }),
     prisma.product.upsert({
       where: { slug: 'shopmax-ecommerce' },
-      update: {},
+      update: {
+        shortDescription: 'Thème WordPress WooCommerce complet pour boutique en ligne avec des fonctionnalités e-commerce avancées.',
+        description: `<h2>ShopMax - Le thème e-commerce ultime</h2>
+<p>ShopMax est un thème WordPress premium spécialement conçu pour WooCommerce. Il offre une expérience d'achat fluide et professionnelle pour vos clients.</p>
+
+<h2>Fonctionnalités e-commerce</h2>
+<ul>
+  <li>Intégration WooCommerce complète</li>
+  <li>Pages produits optimisées pour la conversion</li>
+  <li>Panier et checkout personnalisables</li>
+  <li>Support multi-devises</li>
+  <li>Gestion des stocks avancée</li>
+  <li>Wishlist et comparaison de produits</li>
+</ul>
+
+<h2>Design et personnalisation</h2>
+<ul>
+  <li>Compatible Elementor Pro</li>
+  <li>30+ templates de pages prédéfinis</li>
+  <li>Options de personnalisation illimitées</li>
+  <li>Design responsive mobile-first</li>
+</ul>
+
+<h2>Performance et SEO</h2>
+<p>ShopMax est optimisé pour la vitesse et le référencement, vous aidant à atteindre de meilleures positions dans les résultats de recherche.</p>`,
+        images: [
+          'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&h=800&fit=crop',
+        ],
+        features: ['WooCommerce Ready', 'Elementor Pro', 'Multi-vendeur', 'SEO optimisé', 'Support 1 an', 'Mises à jour gratuites'],
+      },
       create: {
         title: 'ShopMax - E-commerce WordPress Theme',
         slug: 'shopmax-ecommerce',
-        shortDescription: 'Thème WordPress WooCommerce complet pour boutique en ligne.',
-        description: '<h2>ShopMax</h2><p>Le thème e-commerce ultime...</p>',
+        shortDescription: 'Thème WordPress WooCommerce complet pour boutique en ligne avec des fonctionnalités e-commerce avancées.',
+        description: `<h2>ShopMax - Le thème e-commerce ultime</h2>
+<p>ShopMax est un thème WordPress premium spécialement conçu pour WooCommerce. Il offre une expérience d'achat fluide et professionnelle pour vos clients.</p>
+
+<h2>Fonctionnalités e-commerce</h2>
+<ul>
+  <li>Intégration WooCommerce complète</li>
+  <li>Pages produits optimisées pour la conversion</li>
+  <li>Panier et checkout personnalisables</li>
+  <li>Support multi-devises</li>
+  <li>Gestion des stocks avancée</li>
+  <li>Wishlist et comparaison de produits</li>
+</ul>
+
+<h2>Design et personnalisation</h2>
+<ul>
+  <li>Compatible Elementor Pro</li>
+  <li>30+ templates de pages prédéfinis</li>
+  <li>Options de personnalisation illimitées</li>
+  <li>Design responsive mobile-first</li>
+</ul>
+
+<h2>Performance et SEO</h2>
+<p>ShopMax est optimisé pour la vitesse et le référencement, vous aidant à atteindre de meilleures positions dans les résultats de recherche.</p>`,
         price: 69,
         salePrice: 49,
-        images: ['https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop'],
+        images: [
+          'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&h=800&fit=crop',
+        ],
         mainFile: '/uploads/shopmax.zip',
         version: '3.1.0',
         filesIncluded: ['PHP', 'CSS', 'JavaScript'],
-        features: ['WooCommerce', 'Elementor', 'Multi-vendeur', 'SEO optimisé'],
+        features: ['WooCommerce Ready', 'Elementor Pro', 'Multi-vendeur', 'SEO optimisé', 'Support 1 an', 'Mises à jour gratuites'],
         tags: ['WordPress', 'E-commerce', 'WooCommerce', 'Shop'],
         downloads: 4560,
         views: 21000,
