@@ -62,7 +62,7 @@ export async function GET(
     // Vérifier les permissions pour les produits non approuvés
     if (product.status !== 'APPROVED') {
       const cookieStore = await cookies()
-      const token = cookieStore.get('token')?.value
+      const token = cookieStore.get('auth-token')?.value
 
       if (!token) {
         return NextResponse.json({ error: 'Produit non disponible' }, { status: 403 })
@@ -163,7 +163,7 @@ export async function PATCH(
 
     // Vérifier l'authentification
     const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
+    const token = cookieStore.get('auth-token')?.value
 
     if (!token) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
@@ -284,7 +284,7 @@ export async function DELETE(
 
     // Vérifier l'authentification
     const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
+    const token = cookieStore.get('auth-token')?.value
 
     if (!token) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })

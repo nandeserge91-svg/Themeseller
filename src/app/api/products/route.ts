@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Vérifier si c'est un admin qui demande tous les produits
     const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
+    const token = cookieStore.get('auth-token')?.value
     let isAdmin = false
     let currentUserId: string | null = null
 
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     // Vérifier l'authentification
     const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
+    const token = cookieStore.get('auth-token')?.value
 
     if (!token) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
