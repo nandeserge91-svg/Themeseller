@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -46,6 +46,8 @@ export default function NouveauProduitPage() {
   const router = useRouter()
   const { addProduct, saveDraft } = useProductsStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [features, setFeatures] = useState<string[]>([''])
@@ -55,6 +57,30 @@ export default function NouveauProduitPage() {
   const [isDragging, setIsDragging] = useState(false)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Vérifier l'authentification au chargement
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me')
+        if (!response.ok) {
+          setAuthError('Vous devez être connecté pour accéder à cette page.')
+          return
+        }
+        const data = await response.json()
+        if (data.user?.role !== 'VENDOR' && data.user?.role !== 'ADMIN') {
+          setAuthError('Vous devez avoir un compte vendeur pour soumettre des produits.')
+          return
+        }
+        setAuthError(null)
+      } catch {
+        setAuthError('Erreur de vérification. Veuillez vous reconnecter.')
+      } finally {
+        setIsCheckingAuth(false)
+      }
+    }
+    checkAuth()
+  }, [])
 
   const [formData, setFormData] = useState({
     title: '',
@@ -267,7 +293,17 @@ export default function NouveauProduitPage() {
         router.push('/vendeur/produits?filter=pending')
       }, 1500)
     } catch (error) {
-      setNotification({ type: 'error', message: 'Erreur lors de la soumission. Veuillez réessayer.' })
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la soumission'
+      // Messages d'erreur spécifiques
+      if (errorMessage.includes('Non authentifié') || errorMessage.includes('Token invalide')) {
+        setNotification({ type: 'error', message: 'Vous devez être connecté pour soumettre un produit.' })
+      } else if (errorMessage.includes('Profil vendeur requis')) {
+        setNotification({ type: 'error', message: 'Vous devez avoir un compte vendeur pour soumettre un produit. Inscrivez-vous en tant que vendeur.' })
+      } else if (errorMessage.includes('Champs requis')) {
+        setNotification({ type: 'error', message: 'Veuillez remplir tous les champs requis (titre, description, prix, catégorie).' })
+      } else {
+        setNotification({ type: 'error', message: errorMessage })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -304,6 +340,39 @@ export default function NouveauProduitPage() {
     } catch (error) {
       setNotification({ type: 'error', message: 'Erreur lors de l\'enregistrement du brouillon' })
     }
+  }
+
+  // Afficher un loader pendant la vérification d'authentification
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600">Vérification en cours...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Afficher un message d'erreur si l'utilisateur n'est pas autorisé
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Accès refusé</h1>
+          <p className="text-gray-600 mb-6">{authError}</p>
+          <div className="flex gap-4 justify-center">
+            <Link href="/connexion">
+              <Button>Se connecter</Button>
+            </Link>
+            <Link href="/devenir-vendeur">
+              <Button variant="secondary">Devenir vendeur</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
