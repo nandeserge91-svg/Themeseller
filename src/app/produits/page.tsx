@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -14,284 +14,21 @@ import {
 } from 'lucide-react'
 import ProductCard from '@/components/ui/ProductCard'
 import Button from '@/components/ui/Button'
+import { useProductsStore } from '@/store/productsStore'
 
-// Données de démonstration
-const allProducts = [
-  {
-    id: '1',
-    title: 'SaaSify - Template Admin Dashboard Premium',
-    slug: 'saasify-admin-dashboard',
-    price: 79,
-    salePrice: 59,
-    images: ['https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop'],
-    averageRating: 4.9,
-    reviewCount: 245,
-    downloads: 3420,
-    vendorName: 'PixelCraft Studio',
-    vendorId: 'v1',
-    categoryName: 'WordPress',
-    categorySlug: 'wordpress',
-    isNew: false,
-    isFeatured: true,
-  },
-  {
-    id: '2',
-    title: 'Flavor - Restaurant & Food Delivery Theme',
-    slug: 'flavor-restaurant-theme',
-    price: 49,
-    images: ['https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop'],
-    averageRating: 4.7,
-    reviewCount: 189,
-    downloads: 2890,
-    vendorName: 'ThemeWizards',
-    vendorId: 'v2',
-    categoryName: 'HTML',
-    categorySlug: 'html',
-    isNew: true,
-    isFeatured: false,
-  },
-  {
-    id: '3',
-    title: 'CryptoTrade - Trading Platform UI Kit Figma',
-    slug: 'cryptotrade-trading-ui',
-    price: 89,
-    salePrice: 69,
-    images: ['https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=800&h=600&fit=crop'],
-    averageRating: 4.8,
-    reviewCount: 156,
-    downloads: 1560,
-    vendorName: 'DesignMasters',
-    vendorId: 'v3',
-    categoryName: 'Figma',
-    categorySlug: 'figma',
-    isNew: false,
-    isFeatured: true,
-  },
-  {
-    id: '4',
-    title: 'FunnelPro - Complete Sales Funnel System',
-    slug: 'funnelpro-sales-funnel',
-    price: 149,
-    images: ['https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop'],
-    averageRating: 4.9,
-    reviewCount: 98,
-    downloads: 890,
-    vendorName: 'ConvertLab',
-    vendorId: 'v4',
-    categoryName: 'Funnels',
-    categorySlug: 'funnels',
-    isNew: true,
-    isFeatured: true,
-  },
-  {
-    id: '5',
-    title: 'Elegance - Portfolio Theme Minimaliste',
-    slug: 'elegance-portfolio',
-    price: 39,
-    images: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop'],
-    averageRating: 4.6,
-    reviewCount: 67,
-    downloads: 780,
-    vendorName: 'MinimalStudio',
-    vendorId: 'v5',
-    categoryName: 'HTML',
-    categorySlug: 'html',
-    isNew: true,
-    isFeatured: false,
-  },
-  {
-    id: '6',
-    title: 'ShopMax - E-commerce WordPress Theme',
-    slug: 'shopmax-ecommerce',
-    price: 69,
-    salePrice: 49,
-    images: ['https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop'],
-    averageRating: 4.8,
-    reviewCount: 312,
-    downloads: 4560,
-    vendorName: 'PixelCraft Studio',
-    vendorId: 'v1',
-    categoryName: 'WordPress',
-    categorySlug: 'wordpress',
-    isNew: true,
-    isFeatured: false,
-  },
-  {
-    id: '7',
-    title: 'MailFlow - Email Templates Collection',
-    slug: 'mailflow-email-templates',
-    price: 29,
-    images: ['https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800&h=600&fit=crop'],
-    averageRating: 4.5,
-    reviewCount: 145,
-    downloads: 2340,
-    vendorName: 'EmailPro',
-    vendorId: 'v6',
-    categoryName: 'Email',
-    categorySlug: 'email',
-    isNew: true,
-    isFeatured: false,
-  },
-  {
-    id: '8',
-    title: 'Jeunesse - Coaching Business Funnel',
-    slug: 'jeunesse-coaching-funnel',
-    price: 99,
-    images: ['https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop'],
-    averageRating: 4.7,
-    reviewCount: 89,
-    downloads: 560,
-    vendorName: 'ConvertLab',
-    vendorId: 'v4',
-    categoryName: 'Funnels',
-    categorySlug: 'funnels',
-    isNew: true,
-    isFeatured: false,
-  },
-  {
-    id: '9',
-    title: 'CreativeAgency - Modern Agency Theme',
-    slug: 'creative-agency-theme',
-    price: 59,
-    images: ['https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop'],
-    averageRating: 4.6,
-    reviewCount: 178,
-    downloads: 2100,
-    vendorName: 'ThemeWizards',
-    vendorId: 'v2',
-    categoryName: 'WordPress',
-    categorySlug: 'wordpress',
-    isNew: false,
-    isFeatured: false,
-  },
-  {
-    id: '10',
-    title: 'HealthCare - Medical Clinic Theme',
-    slug: 'healthcare-medical-theme',
-    price: 55,
-    images: ['https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&h=600&fit=crop'],
-    averageRating: 4.4,
-    reviewCount: 92,
-    downloads: 890,
-    vendorName: 'MinimalStudio',
-    vendorId: 'v5',
-    categoryName: 'HTML',
-    categorySlug: 'html',
-    isNew: false,
-    isFeatured: false,
-  },
-  {
-    id: '11',
-    title: 'AppLanding - Mobile App Landing Page',
-    slug: 'applanding-mobile-page',
-    price: 35,
-    salePrice: 25,
-    images: ['https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&h=600&fit=crop'],
-    averageRating: 4.7,
-    reviewCount: 234,
-    downloads: 3200,
-    vendorName: 'PixelCraft Studio',
-    vendorId: 'v1',
-    categoryName: 'Landing',
-    categorySlug: 'landing',
-    isNew: false,
-    isFeatured: true,
-  },
-  {
-    id: '12',
-    title: 'DashUI - Admin Dashboard Figma Kit',
-    slug: 'dashui-admin-figma',
-    price: 79,
-    images: ['https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop'],
-    averageRating: 4.9,
-    reviewCount: 167,
-    downloads: 1450,
-    vendorName: 'DesignMasters',
-    vendorId: 'v3',
-    categoryName: 'Figma',
-    categorySlug: 'figma',
-    isNew: false,
-    isFeatured: false,
-  },
-  {
-    id: '13',
-    title: 'ShopifyPro - Thème E-commerce Premium',
-    slug: 'shopify-pro-ecommerce',
-    price: 180,
-    salePrice: 149,
-    images: ['https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&h=600&fit=crop'],
-    averageRating: 4.8,
-    reviewCount: 234,
-    downloads: 1890,
-    vendorName: 'ShopifyExperts',
-    vendorId: 'v7',
-    categoryName: 'Shopify',
-    categorySlug: 'shopify',
-    isNew: true,
-    isFeatured: true,
-  },
-  {
-    id: '14',
-    title: 'FashionStore - Thème Mode Shopify',
-    slug: 'fashion-store-shopify',
-    price: 159,
-    images: ['https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800&h=600&fit=crop'],
-    averageRating: 4.7,
-    reviewCount: 156,
-    downloads: 1234,
-    vendorName: 'ShopifyExperts',
-    vendorId: 'v7',
-    categoryName: 'Shopify',
-    categorySlug: 'shopify',
-    isNew: false,
-    isFeatured: false,
-  },
-  {
-    id: '15',
-    title: 'SystemePro - Tunnel de Vente Complet',
-    slug: 'systeme-pro-tunnel',
-    price: 97,
-    salePrice: 67,
-    images: ['https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=600&fit=crop'],
-    averageRating: 4.9,
-    reviewCount: 312,
-    downloads: 2456,
-    vendorName: 'FunnelMasters',
-    vendorId: 'v8',
-    categoryName: 'Systeme.io',
-    categorySlug: 'systeme-io',
-    isNew: true,
-    isFeatured: true,
-  },
-  {
-    id: '16',
-    title: 'CoachingFunnel - Pack Systeme.io Coach',
-    slug: 'coaching-funnel-systeme',
-    price: 127,
-    images: ['https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop'],
-    averageRating: 4.6,
-    reviewCount: 89,
-    downloads: 890,
-    vendorName: 'FunnelMasters',
-    vendorId: 'v8',
-    categoryName: 'Systeme.io',
-    categorySlug: 'systeme-io',
-    isNew: true,
-    isFeatured: false,
-  },
-]
+// Mapping des catégories pour le slug
+const categorySlugMap: Record<string, string> = {
+  'WordPress': 'wordpress',
+  'HTML': 'html',
+  'Figma': 'figma',
+  'Funnels': 'funnels',
+  'Email': 'email',
+  'Landing': 'landing',
+  'Shopify': 'shopify',
+  'Systeme.io': 'systeme-io',
+}
 
-const categories = [
-  { name: 'Tous', slug: 'all', count: allProducts.length },
-  { name: 'WordPress', slug: 'wordpress', count: 3 },
-  { name: 'Shopify', slug: 'shopify', count: 2 },
-  { name: 'Systeme.io', slug: 'systeme-io', count: 2 },
-  { name: 'HTML', slug: 'html', count: 3 },
-  { name: 'Figma', slug: 'figma', count: 2 },
-  { name: 'Funnels', slug: 'funnels', count: 2 },
-  { name: 'Email', slug: 'email', count: 1 },
-  { name: 'Landing', slug: 'landing', count: 1 },
-]
+// Les catégories seront calculées dynamiquement
 
 const sortOptions = [
   { name: 'Plus récents', value: 'newest' },
@@ -321,6 +58,55 @@ export default function ProduitsPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [minRating, setMinRating] = useState(0)
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Récupérer les produits depuis le store (seulement les actifs/approuvés)
+  const { products: storeProducts } = useProductsStore()
+  
+  // Hydratation côté client
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // Transformer les produits du store pour l'affichage
+  const allProducts = useMemo(() => {
+    return storeProducts
+      .filter(p => p.status === 'active') // Seulement les produits approuvés
+      .map(p => ({
+        id: p.id,
+        title: p.title,
+        slug: p.slug,
+        price: p.price,
+        salePrice: p.salePrice,
+        images: [p.image],
+        averageRating: p.rating,
+        reviewCount: Math.floor(p.rating * 30), // Estimation
+        downloads: p.sales,
+        vendorName: p.vendor.name,
+        vendorId: p.vendor.id,
+        categoryName: p.category,
+        categorySlug: categorySlugMap[p.category] || p.category.toLowerCase().replace(/\s+/g, '-'),
+        isNew: new Date(p.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Nouveau si < 30 jours
+        isFeatured: p.rating >= 4.5,
+      }))
+  }, [storeProducts])
+
+  // Calculer les catégories dynamiquement
+  const categories = useMemo(() => {
+    const categoryCounts: Record<string, number> = {}
+    allProducts.forEach(p => {
+      const slug = p.categorySlug
+      categoryCounts[slug] = (categoryCounts[slug] || 0) + 1
+    })
+    
+    return [
+      { name: 'Tous', slug: 'all', count: allProducts.length },
+      ...Object.entries(categoryCounts).map(([slug, count]) => {
+        const categoryName = Object.entries(categorySlugMap).find(([, s]) => s === slug)?.[0] || slug
+        return { name: categoryName, slug, count }
+      })
+    ]
+  }, [allProducts])
 
   const filteredProducts = useMemo(() => {
     let result = [...allProducts]
@@ -379,6 +165,18 @@ export default function ProduitsPage() {
     selectedPriceRange !== priceRanges[0],
     minRating > 0,
   ].filter(Boolean).length
+
+  // Afficher un loader pendant l'hydratation
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des produits...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
