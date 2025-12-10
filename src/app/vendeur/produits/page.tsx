@@ -29,6 +29,7 @@ import Button from '@/components/ui/Button'
 import { formatPrice } from '@/lib/utils'
 import { useCurrencyStore } from '@/store/currencyStore'
 import { useProductsStore, Product } from '@/store/productsStore'
+import { useAuthStore } from '@/store/authStore'
 
 const statusConfig: Record<string, { label: string; icon: typeof CheckCircle; color: string; textColor: string }> = {
   active: { label: 'En vente', icon: CheckCircle, color: 'text-accent-600 bg-accent-50', textColor: 'text-accent-700' },
@@ -44,10 +45,16 @@ const statusConfig: Record<string, { label: string; icon: typeof CheckCircle; co
 export default function VendeurProduitsPage() {
   const searchParams = useSearchParams()
   const { products: allProducts, deleteProduct, updateProduct, resubmitProduct, addProduct, fetchProducts, isLoading } = useProductsStore()
+  const { user } = useAuthStore()
   
-  // En production, on filtrerait par vendeur connecté
-  // Pour la démo, on affiche tous les produits non-brouillons
-  const products = allProducts.filter(p => p.status !== 'draft' || p.vendor?.id)
+  // Filtrer les produits du vendeur connecté
+  const products = allProducts.filter(p => {
+    // Afficher tous les produits si admin
+    if (user?.role === 'ADMIN') return true
+    // Filtrer par vendeur connecté
+    const vendorId = user?.vendorProfile?.id
+    return p.vendor?.userId === user?.id || p.vendor?.id === vendorId
+  })
   
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
