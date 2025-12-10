@@ -94,17 +94,24 @@ export default function VendeurProduitsPage() {
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter
+    // Matcher les statuts en incluant les variations
+    let matchesStatus = statusFilter === 'all'
+    if (!matchesStatus) {
+      if (statusFilter === 'active') matchesStatus = p.status === 'active' || p.status === 'approved'
+      else if (statusFilter === 'pending') matchesStatus = p.status === 'pending' || p.status === 'pending-review'
+      else if (statusFilter === 'suspended') matchesStatus = p.status === 'suspended' || p.status === 'archived'
+      else matchesStatus = p.status === statusFilter
+    }
     return matchesSearch && matchesStatus
   })
 
-  // Stats
+  // Stats - inclure tous les statuts possibles
   const stats = {
     total: products.length,
-    active: products.filter(p => p.status === 'active').length,
-    pending: products.filter(p => p.status === 'pending').length,
+    active: products.filter(p => p.status === 'active' || p.status === 'approved').length,
+    pending: products.filter(p => p.status === 'pending' || p.status === 'pending-review').length,
     rejected: products.filter(p => p.status === 'rejected').length,
-    suspended: products.filter(p => p.status === 'suspended').length,
+    suspended: products.filter(p => p.status === 'suspended' || p.status === 'archived').length,
     draft: products.filter(p => p.status === 'draft').length,
     totalSales: products.reduce((acc, p) => acc + p.sales, 0),
     totalRevenue: products.reduce((acc, p) => acc + (p.revenue || 0), 0),

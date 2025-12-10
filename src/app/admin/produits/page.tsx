@@ -100,7 +100,14 @@ export default function AdminProduitsPage() {
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          p.vendor.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter
+    // Matcher les statuts en incluant les variations
+    let matchesStatus = statusFilter === 'all'
+    if (!matchesStatus) {
+      if (statusFilter === 'approved') matchesStatus = p.status === 'active' || p.status === 'approved'
+      else if (statusFilter === 'pending') matchesStatus = p.status === 'pending' || p.status === 'pending-review'
+      else if (statusFilter === 'suspended') matchesStatus = p.status === 'suspended' || p.status === 'archived'
+      else matchesStatus = p.status === statusFilter
+    }
     return matchesSearch && matchesStatus
   })
 
@@ -157,7 +164,7 @@ export default function AdminProduitsPage() {
     }
   }
 
-  const pendingCount = products.filter(p => p.status === 'pending').length
+  const pendingCount = products.filter(p => p.status === 'pending' || p.status === 'pending-review').length
 
   // Afficher un loader pendant le chargement
   if (!isHydrated || isLoading) {
@@ -406,7 +413,7 @@ export default function AdminProduitsPage() {
                             </button>
 
                             {/* Actions rapides pour les produits en attente */}
-                            {product.status === 'pending' && (
+                            {(product.status === 'pending' || product.status === 'pending-review') && (
                               <>
                                 <button 
                                   onClick={() => handleApprove(product.id)}
@@ -681,7 +688,7 @@ function ViewProductModal({
                 Voir sur le site
               </Button>
             </Link>
-            {product.status === 'pending' && (
+            {(product.status === 'pending' || product.status === 'pending-review') && (
               <>
                 <Button onClick={onApprove} className="flex-1" leftIcon={<CheckCircle className="w-4 h-4" />}>
                   Approuver

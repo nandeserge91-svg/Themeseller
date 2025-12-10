@@ -42,6 +42,7 @@ export interface Product {
   rejectionReason?: string | null
   fileName?: string
   fileSize?: number
+  mainFile?: string
   isFeatured?: boolean
   reviews?: ProductReview[]
   isNew?: boolean

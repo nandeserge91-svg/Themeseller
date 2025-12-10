@@ -22,11 +22,6 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { useProductsStore } from '@/store/productsStore'
 
-// ID du vendeur connecté (en démo)
-const CURRENT_VENDOR_ID = 'current-vendor'
-const CURRENT_VENDOR_NAME = 'Mon Entreprise'
-const CURRENT_VENDOR_EMAIL = 'vendeur@demo.com'
-
 const categories = [
   { id: 'cat1', name: 'WordPress' },
   { id: 'cat2', name: 'Shopify' },
@@ -246,29 +241,25 @@ export default function NouveauProduitPage() {
       const selectedCategory = categories.find(c => c.id === formData.categoryId)
       
       // Ajouter le produit au store avec statut "pending"
-      addProduct({
+      const result = await addProduct({
         title: formData.title,
-        image: images[0] || 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=200&h=150&fit=crop',
+        images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=600&fit=crop'],
         price: parseFloat(formData.price),
         salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
-        status: 'pending',
-        category: selectedCategory?.name || 'Autre',
         categoryId: formData.categoryId,
-        description: formData.description,
+        description: formData.description || '<p>Description du produit</p>',
         shortDescription: formData.shortDescription,
         previewUrl: formData.previewUrl,
         version: formData.version,
         features: features.filter(f => f.trim() !== ''),
         tags: tags,
         filesIncluded: formData.filesIncluded,
-        fileName: mainFile.name,
-        fileSize: mainFile.size,
-        vendor: {
-          id: CURRENT_VENDOR_ID,
-          name: CURRENT_VENDOR_NAME,
-          email: CURRENT_VENDOR_EMAIL,
-        },
+        mainFile: mainFile.url || '',
       })
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de la soumission')
+      }
 
       setNotification({ type: 'success', message: 'Produit soumis avec succès ! En attente d\'approbation.' })
       
@@ -283,37 +274,36 @@ export default function NouveauProduitPage() {
   }
 
   const handleSaveDraft = async () => {
-    // Trouver le nom de la catégorie
-    const selectedCategory = categories.find(c => c.id === formData.categoryId)
-    
-    saveDraft({
-      title: formData.title || 'Brouillon sans titre',
-      image: images[0] || 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=200&h=150&fit=crop',
-      price: formData.price ? parseFloat(formData.price) : 0,
-      salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
-      category: selectedCategory?.name || 'Non définie',
-      categoryId: formData.categoryId,
-      description: formData.description,
-      shortDescription: formData.shortDescription,
-      previewUrl: formData.previewUrl,
-      version: formData.version,
-      features: features.filter(f => f.trim() !== ''),
-      tags: tags,
-      filesIncluded: formData.filesIncluded,
-      fileName: mainFile?.name,
-      fileSize: mainFile?.size,
-      vendor: {
-        id: CURRENT_VENDOR_ID,
-        name: CURRENT_VENDOR_NAME,
-        email: CURRENT_VENDOR_EMAIL,
-      },
-    })
-    
-    setNotification({ type: 'success', message: 'Brouillon enregistré !' })
-    
-    setTimeout(() => {
-      router.push('/vendeur/produits?filter=draft')
-    }, 1500)
+    try {
+      const result = await saveDraft({
+        title: formData.title || 'Brouillon sans titre',
+        images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&h=600&fit=crop'],
+        price: formData.price ? parseFloat(formData.price) : 0,
+        salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
+        categoryId: formData.categoryId || categories[0]?.id,
+        description: formData.description || '<p>Description à compléter</p>',
+        shortDescription: formData.shortDescription,
+        previewUrl: formData.previewUrl,
+        version: formData.version,
+        features: features.filter(f => f.trim() !== ''),
+        tags: tags,
+        filesIncluded: formData.filesIncluded,
+        mainFile: mainFile?.url || '',
+      })
+
+      if (!result.success) {
+        setNotification({ type: 'error', message: result.error || 'Erreur lors de l\'enregistrement' })
+        return
+      }
+      
+      setNotification({ type: 'success', message: 'Brouillon enregistré !' })
+      
+      setTimeout(() => {
+        router.push('/vendeur/produits?filter=draft')
+      }, 1500)
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Erreur lors de l\'enregistrement du brouillon' })
+    }
   }
 
   return (
