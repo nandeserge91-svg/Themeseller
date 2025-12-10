@@ -230,15 +230,26 @@ export async function PATCH(
     if (body.tags) updateData.tags = body.tags
     if (body.filesIncluded) updateData.filesIncluded = body.filesIncluded
 
-    // Resoumettre un produit rejeté
-    if (body.action === 'resubmit' && isOwner && product.status === 'REJECTED') {
-      updateData.status = 'PENDING_REVIEW'
-      updateData.rejectionReason = null
+    // Resoumettre un produit rejeté ou suspendu
+    if (body.action === 'resubmit' && isOwner) {
+      if (product.status === 'REJECTED' || product.status === 'ARCHIVED' || product.status === 'DRAFT') {
+        updateData.status = 'PENDING_REVIEW'
+        updateData.rejectionReason = null
+      }
     }
 
     // Soumettre un brouillon
-    if (body.action === 'submit' && isOwner && product.status === 'DRAFT') {
-      updateData.status = 'PENDING_REVIEW'
+    if (body.action === 'submit' && isOwner) {
+      if (product.status === 'DRAFT') {
+        updateData.status = 'PENDING_REVIEW'
+      }
+    }
+    
+    // Mettre à jour le statut en pending si le produit approuvé est modifié significativement
+    if (body.action === 'update_and_resubmit' && isOwner) {
+      if (product.status === 'APPROVED') {
+        updateData.status = 'PENDING_REVIEW'
+      }
     }
 
     const updatedProduct = await prisma.product.update({
