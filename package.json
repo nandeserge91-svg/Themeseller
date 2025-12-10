@@ -17,7 +17,9 @@
   "dependencies": {
     "@prisma/client": "^5.7.0",
     "@stripe/stripe-js": "^2.2.0",
+    "@vercel/blob": "^2.0.0",
     "bcryptjs": "^2.4.3",
+    "canvas-confetti": "^1.9.2",
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.16",
     "jose": "^5.2.0",
@@ -28,8 +30,7 @@
     "react-hot-toast": "^2.4.1",
     "stripe": "^14.9.0",
     "tailwind-merge": "^2.2.0",
-    "zustand": "^4.4.7",
-    "canvas-confetti": "^1.9.2"
+    "zustand": "^4.4.7"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -48,4 +49,3 @@
     "typescript": "^5.3.3"
   }
 }
-

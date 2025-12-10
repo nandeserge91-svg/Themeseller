@@ -190,19 +190,52 @@ export default function NouveauProduitPage() {
     }
   }
 
-  // Upload d'images
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // État pour l'upload en cours
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  // Upload d'images vers le serveur
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     const remainingSlots = 6 - images.length
     const filesToAdd = files.slice(0, remainingSlots)
 
-    filesToAdd.forEach((file) => {
-      if (file.type.startsWith('image/')) {
-        const url = URL.createObjectURL(file)
-        setImages((prev) => [...prev, url])
-        setImageFiles((prev) => [...prev, file])
+    if (filesToAdd.length === 0) return
+
+    setIsUploading(true)
+    setUploadError(null)
+
+    for (const file of filesToAdd) {
+      if (!file.type.startsWith('image/')) continue
+
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.url) {
+          setImages((prev) => [...prev, data.url])
+        } else {
+          // Si l'upload échoue, utiliser l'URL locale comme fallback
+          const localUrl = URL.createObjectURL(file)
+          setImages((prev) => [...prev, localUrl])
+          setUploadError(data.error || 'Upload échoué, image locale utilisée')
+        }
+      } catch (error) {
+        // Fallback vers l'URL locale
+        const localUrl = URL.createObjectURL(file)
+        setImages((prev) => [...prev, localUrl])
+        setUploadError('Erreur réseau, image locale utilisée')
       }
-    })
+    }
+
+    setIsUploading(false)
   }
 
   const handleAddFeature = () => {
@@ -584,18 +617,34 @@ export default function NouveauProduitPage() {
               ))}
               
               {images.length < 6 && (
-                <label className="aspect-video border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-colors">
-                  <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-500">Ou uploadez</span>
-                  <span className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP</span>
+                <label className={`aspect-video border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-colors ${isUploading ? 'border-primary-400 bg-primary-50' : 'border-gray-200 cursor-pointer hover:border-primary-500 hover:bg-primary-50'}`}>
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-8 h-8 text-primary-600 animate-spin mb-2" />
+                      <span className="text-sm text-primary-600">Upload en cours...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-500">Ou uploadez</span>
+                      <span className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP (max 4.5MB)</span>
+                    </>
+                  )}
                   <input
                     type="file"
                     accept="image/*"
                     multiple
                     className="hidden"
                     onChange={handleImageUpload}
+                    disabled={isUploading}
                   />
                 </label>
+              )}
+              
+              {uploadError && (
+                <div className="col-span-full text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+                  ⚠️ {uploadError}
+                </div>
               )}
             </div>
           </div>
