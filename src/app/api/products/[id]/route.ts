@@ -139,7 +139,7 @@ export async function GET(
       }))
     }
 
-    return NextResponse.json({ product: formattedProduct })
+    return NextResponse.json({ product: formattedProduct, apiVersion: '2.0' })
   } catch (error) {
     console.error('Erreur GET /api/products/[id]:', error)
     return NextResponse.json(
