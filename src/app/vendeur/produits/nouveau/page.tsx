@@ -515,8 +515,45 @@ export default function NouveauProduitPage() {
           {/* Images */}
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Images de prévisualisation</h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-500 mb-4">
               Ajoutez jusqu'à 6 images de votre produit. La première sera l'image principale.
+            </p>
+
+            {/* Champ pour coller une URL d'image */}
+            <div className="mb-4 flex gap-2">
+              <input
+                type="url"
+                placeholder="Collez une URL d'image (https://...)"
+                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const input = e.target as HTMLInputElement
+                    const url = input.value.trim()
+                    if (url && images.length < 6 && (url.startsWith('http://') || url.startsWith('https://'))) {
+                      setImages([...images, url])
+                      input.value = ''
+                    }
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement
+                  const url = input?.value?.trim()
+                  if (url && images.length < 6 && (url.startsWith('http://') || url.startsWith('https://'))) {
+                    setImages([...images, url])
+                    input.value = ''
+                  }
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Ajouter
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">
+              💡 Utilisez des images depuis Unsplash, Imgur, ou votre propre hébergement
             </p>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -549,7 +586,7 @@ export default function NouveauProduitPage() {
               {images.length < 6 && (
                 <label className="aspect-video border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-colors">
                   <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-500">Ajouter une image</span>
+                  <span className="text-sm text-gray-500">Ou uploadez</span>
                   <span className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP</span>
                   <input
                     type="file"
