@@ -62,7 +62,7 @@ interface ProductsState {
   lastFetch: number | null
   
   // Actions API
-  fetchProducts: (filters?: { status?: string; vendorId?: string; category?: string }) => Promise<void>
+  fetchProducts: (filters?: { status?: string; vendorId?: string; category?: string; my?: boolean }) => Promise<void>
   fetchProduct: (idOrSlug: string) => Promise<Product | null>
   createProduct: (product: Partial<Product>) => Promise<{ success: boolean; product?: Product; error?: string }>
   updateProduct: (id: string, updates: Partial<Product>) => Promise<{ success: boolean; error?: string }>
@@ -128,6 +128,7 @@ export const useProductsStore = create<ProductsState>()((set, get) => ({
       if (filters?.status) params.append('status', mapStatusToApi(filters.status))
       if (filters?.vendorId) params.append('vendorId', filters.vendorId)
       if (filters?.category) params.append('category', filters.category)
+      if (filters?.my) params.append('my', 'true')
       
       const url = `/api/products${params.toString() ? `?${params}` : ''}`
       const response = await fetch(url)

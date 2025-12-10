@@ -45,10 +45,10 @@ export default function VendeurDashboard() {
   const { user } = useAuthStore()
   const [isHydrated, setIsHydrated] = useState(false)
   
-  // Charger les produits au montage
+  // Charger les produits du vendeur au montage
   useEffect(() => {
     setIsHydrated(true)
-    fetchProducts() // Charger tous les produits
+    fetchProducts({ my: true }) // Charger les produits du vendeur connecté
   }, [fetchProducts])
   
   // Filtrer les produits du vendeur connecté

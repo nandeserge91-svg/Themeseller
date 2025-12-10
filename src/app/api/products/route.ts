@@ -19,24 +19,36 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get('featured')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    // Vérifier si c'est un admin qui demande tous les produits
+    // Vérifier l'authentification
     const cookieStore = await cookies()
     const token = cookieStore.get('auth-token')?.value
     let isAdmin = false
+    let isVendor = false
     let currentUserId: string | null = null
+    let currentVendorId: string | null = null
 
     if (token) {
       const user = await verifyToken(token)
       if (user) {
         isAdmin = user.role === 'ADMIN'
+        isVendor = user.role === 'VENDOR' || user.role === 'ADMIN'
         currentUserId = user.id
+        
+        // Récupérer le profil vendeur de l'utilisateur connecté
+        if (isVendor) {
+          const vendorProfile = await prisma.vendorProfile.findUnique({
+            where: { userId: user.id },
+            select: { id: true }
+          })
+          currentVendorId = vendorProfile?.id || null
+        }
       }
     }
 
     // Construire la requête
     const where: any = {}
 
-    // Vérifier si le vendeur appartient à l'utilisateur actuel
+    // Vérifier si le vendeur demandé appartient à l'utilisateur actuel
     let isOwnVendor = false
     if (vendorId && currentUserId) {
       const vendor = await prisma.vendorProfile.findUnique({
@@ -45,20 +57,27 @@ export async function GET(request: NextRequest) {
       })
       isOwnVendor = vendor?.userId === currentUserId
     }
-
-    // Filtrer par vendeur
-    if (vendorId) {
+    
+    // Si vendeur connecté et pas de filtre vendorId spécifique, montrer ses produits
+    // seulement si on est sur une page vendeur (pas la page publique)
+    const myProducts = searchParams.get('my') === 'true'
+    if (myProducts && currentVendorId) {
+      where.vendorId = currentVendorId
+    } else if (vendorId) {
       where.vendorId = vendorId
     }
 
     // Filtrer par statut
     if (status) {
       where.status = status
-    } else if (!isAdmin && !isOwnVendor) {
-      // Par défaut, les non-admins et non-propriétaires ne voient que les approuvés
+    } else if (isAdmin) {
+      // Admin voit tous les statuts
+    } else if (isOwnVendor || (myProducts && currentVendorId)) {
+      // Vendeur voit tous ses propres produits (tous statuts)
+    } else {
+      // Par défaut, le public ne voit que les produits approuvés
       where.status = 'APPROVED'
     }
-    // Admins et propriétaires de vendeur voient tous les statuts
 
     // Filtrer par catégorie
     if (category) {

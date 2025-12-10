@@ -66,10 +66,10 @@ export default function VendeurProduitsPage() {
   const menuRef = useRef<HTMLDivElement>(null)
   const { currency } = useCurrencyStore()
 
-  // Charger les produits au montage
+  // Charger les produits du vendeur au montage
   useEffect(() => {
     setIsHydrated(true)
-    fetchProducts() // Charger tous les produits
+    fetchProducts({ my: true }) // Charger les produits du vendeur connecté
   }, [fetchProducts])
 
   // Mettre à jour le filtre depuis l'URL
