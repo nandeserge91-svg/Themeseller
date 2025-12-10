@@ -1,102 +1,51 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Search, Star, Package, TrendingUp, CheckCircle } from 'lucide-react'
+import { Search, Star, Package, TrendingUp, CheckCircle, Loader2, Users } from 'lucide-react'
 import Button from '@/components/ui/Button'
 
-const vendors = [
-  {
-    id: 'v1',
-    name: 'PixelCraft Studio',
-    slug: 'pixelcraft-studio',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
-    banner: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=300&fit=crop',
-    bio: 'Créateur de templates premium depuis 2020. Spécialisé en WordPress et React.',
-    rating: 4.9,
-    reviewCount: 890,
-    totalSales: 12500,
-    productCount: 24,
-    isVerified: true,
-    featured: true,
-  },
-  {
-    id: 'v2',
-    name: 'ThemeWizards',
-    slug: 'themewizards',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-    banner: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=300&fit=crop',
-    bio: 'Agence de design spécialisée dans les thèmes e-commerce et business.',
-    rating: 4.8,
-    reviewCount: 654,
-    totalSales: 8900,
-    productCount: 18,
-    isVerified: true,
-    featured: true,
-  },
-  {
-    id: 'v3',
-    name: 'DesignMasters',
-    slug: 'designmasters',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop',
-    banner: 'https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=800&h=300&fit=crop',
-    bio: 'UI/UX Designer avec 10 ans d\'expérience. Figma & Sketch expert.',
-    rating: 4.9,
-    reviewCount: 423,
-    totalSales: 5600,
-    productCount: 15,
-    isVerified: true,
-    featured: false,
-  },
-  {
-    id: 'v4',
-    name: 'ConvertLab',
-    slug: 'convertlab',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
-    banner: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=300&fit=crop',
-    bio: 'Spécialiste des tunnels de vente et landing pages haute conversion.',
-    rating: 4.8,
-    reviewCount: 312,
-    totalSales: 3400,
-    productCount: 12,
-    isVerified: true,
-    featured: true,
-  },
-  {
-    id: 'v5',
-    name: 'MinimalStudio',
-    slug: 'minimalstudio',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
-    banner: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=300&fit=crop',
-    bio: 'Design minimaliste et épuré. Portfolios et sites vitrines.',
-    rating: 4.7,
-    reviewCount: 234,
-    totalSales: 2100,
-    productCount: 9,
-    isVerified: false,
-    featured: false,
-  },
-  {
-    id: 'v6',
-    name: 'EmailPro',
-    slug: 'emailpro',
-    avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcabd36?w=200&h=200&fit=crop',
-    banner: 'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800&h=300&fit=crop',
-    bio: 'Templates email responsive pour toutes vos campagnes marketing.',
-    rating: 4.6,
-    reviewCount: 189,
-    totalSales: 1800,
-    productCount: 8,
-    isVerified: true,
-    featured: false,
-  },
-]
+interface Vendor {
+  id: string
+  name: string
+  slug: string
+  avatar: string
+  banner: string
+  bio: string
+  rating: number
+  reviewCount: number
+  totalSales: number
+  productCount: number
+  isVerified: boolean
+  featured: boolean
+  createdAt: string
+}
 
 export default function VendeursPage() {
+  const [vendors, setVendors] = useState<Vendor[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'verified' | 'featured'>('all')
+
+  // Charger les vendeurs depuis l'API
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await fetch('/api/vendors')
+        if (response.ok) {
+          const data = await response.json()
+          setVendors(data.vendors || [])
+        }
+      } catch (error) {
+        console.error('Erreur chargement vendeurs:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchVendors()
+  }, [])
 
   const filteredVendors = vendors.filter((vendor) => {
     const matchesSearch = vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -136,10 +85,20 @@ export default function VendeursPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Loading */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader2 className="w-10 h-10 animate-spin text-primary-600 mx-auto mb-4" />
+              <p className="text-gray-600">Chargement des vendeurs...</p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Filters */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <p className="text-gray-600">
-            <span className="font-semibold text-gray-900">{filteredVendors.length}</span> vendeurs
+            <span className="font-semibold text-gray-900">{filteredVendors.length}</span> vendeur{filteredVendors.length > 1 ? 's' : ''}
           </p>
           
           <div className="flex gap-2">
@@ -239,19 +198,38 @@ export default function VendeursPage() {
           ))}
         </div>
 
-        {filteredVendors.length === 0 && (
+        {filteredVendors.length === 0 && !isLoading && (
           <div className="card p-12 text-center">
-            <Search className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Aucun vendeur trouvé
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Essayez de modifier votre recherche
-            </p>
-            <Button variant="secondary" onClick={() => setSearchQuery('')}>
-              Réinitialiser
-            </Button>
+            {vendors.length === 0 ? (
+              <>
+                <Users className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Aucun vendeur pour le moment
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Soyez le premier à rejoindre notre communauté de vendeurs !
+                </p>
+                <Link href="/devenir-vendeur">
+                  <Button>Devenir vendeur</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Search className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Aucun vendeur trouvé
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Essayez de modifier votre recherche
+                </p>
+                <Button variant="secondary" onClick={() => setSearchQuery('')}>
+                  Réinitialiser
+                </Button>
+              </>
+            )}
           </div>
+        )}
+          </>
         )}
 
         {/* CTA */}
