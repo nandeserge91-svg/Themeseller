@@ -59,6 +59,7 @@ export default function ProduitsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [minRating, setMinRating] = useState(0)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
 
   // Récupérer les produits depuis le store (seulement les actifs/approuvés)
   const { products: storeProducts, isLoading, fetchProducts, getActiveProducts } = useProductsStore()
@@ -66,7 +67,11 @@ export default function ProduitsPage() {
   // Charger les produits depuis l'API
   useEffect(() => {
     setIsHydrated(true)
-    fetchProducts({ status: 'active' }) // Charger seulement les produits approuvés
+    const loadProducts = async () => {
+      await fetchProducts({ status: 'active' }) // Charger seulement les produits approuvés
+      setHasLoadedOnce(true)
+    }
+    loadProducts()
   }, [fetchProducts])
 
   // Transformer les produits du store pour l'affichage
@@ -167,8 +172,8 @@ export default function ProduitsPage() {
     minRating > 0,
   ].filter(Boolean).length
 
-  // Afficher un loader pendant le chargement
-  if (!isHydrated || isLoading) {
+  // Afficher un loader pendant le chargement initial
+  if (!isHydrated || isLoading || !hasLoadedOnce) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

@@ -90,6 +90,7 @@ export default function CategoriePage() {
   const [selectedSort, setSelectedSort] = useState('popular')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [isHydrated, setIsHydrated] = useState(false)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
 
   // Récupérer les produits depuis le store
   const { products: storeProducts, isLoading, fetchProducts } = useProductsStore()
@@ -97,7 +98,12 @@ export default function CategoriePage() {
   // Charger les produits depuis l'API
   useEffect(() => {
     setIsHydrated(true)
-    fetchProducts({ status: 'active', category: slug }) // Charger les produits de cette catégorie
+    setHasLoadedOnce(false) // Reset when slug changes
+    const loadProducts = async () => {
+      await fetchProducts({ status: 'active', category: slug }) // Charger les produits de cette catégorie
+      setHasLoadedOnce(true)
+    }
+    loadProducts()
   }, [fetchProducts, slug])
 
   // Transformer les produits du store pour l'affichage
@@ -155,8 +161,8 @@ export default function CategoriePage() {
     return result
   }, [slug, searchQuery, selectedSort])
 
-  // Afficher un loader pendant le chargement
-  if (!isHydrated || isLoading) {
+  // Afficher un loader pendant le chargement initial
+  if (!isHydrated || isLoading || !hasLoadedOnce) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
