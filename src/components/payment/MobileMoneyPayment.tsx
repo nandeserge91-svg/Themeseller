@@ -14,33 +14,68 @@ interface MobileMoneyPaymentProps {
   onCancel?: () => void
 }
 
+// Composants SVG pour les logos des opérateurs
+const OrangeMoneyLogo = () => (
+  <svg viewBox="0 0 48 48" className="w-10 h-10">
+    <circle cx="24" cy="24" r="24" fill="#FF6600"/>
+    <path d="M24 10c-7.732 0-14 6.268-14 14s6.268 14 14 14 14-6.268 14-14-6.268-14-14-14zm0 24c-5.523 0-10-4.477-10-10s4.477-10 10-10 10 4.477 10 10-4.477 10-10 10z" fill="#fff"/>
+    <text x="24" y="28" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="bold">OM</text>
+  </svg>
+)
+
+const MTNLogo = () => (
+  <svg viewBox="0 0 48 48" className="w-10 h-10">
+    <circle cx="24" cy="24" r="24" fill="#FFCC00"/>
+    <rect x="10" y="16" width="28" height="16" rx="2" fill="#003399"/>
+    <text x="24" y="28" textAnchor="middle" fill="#FFCC00" fontSize="10" fontWeight="bold">MTN</text>
+  </svg>
+)
+
+const MoovLogo = () => (
+  <svg viewBox="0 0 48 48" className="w-10 h-10">
+    <circle cx="24" cy="24" r="24" fill="#0066B3"/>
+    <circle cx="24" cy="24" r="14" fill="#fff"/>
+    <circle cx="24" cy="24" r="10" fill="#0066B3"/>
+    <text x="24" y="28" textAnchor="middle" fill="#fff" fontSize="7" fontWeight="bold">MOOV</text>
+  </svg>
+)
+
+const WaveLogo = () => (
+  <svg viewBox="0 0 48 48" className="w-10 h-10">
+    <circle cx="24" cy="24" r="24" fill="#1DC7EA"/>
+    <path d="M10 24c4-4 8-8 14-4s10 0 14-4" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round"/>
+    <path d="M10 30c4-4 8-8 14-4s10 0 14-4" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round"/>
+    <path d="M10 18c4-4 8-8 14-4s10 0 14-4" stroke="#fff" strokeWidth="3" fill="none" strokeLinecap="round"/>
+  </svg>
+)
+
 const providers = [
   { 
     id: 'orange_money', 
     name: 'Orange Money', 
     color: 'bg-orange-500',
-    logo: '🟠',
+    Logo: OrangeMoneyLogo,
     prefix: ['07', '08', '09']
   },
   { 
     id: 'mtn_money', 
-    name: 'MTN Money', 
+    name: 'MTN MoMo', 
     color: 'bg-yellow-500',
-    logo: '🟡',
+    Logo: MTNLogo,
     prefix: ['05', '04']
   },
   { 
     id: 'moov_money', 
     name: 'Moov Money', 
     color: 'bg-blue-500',
-    logo: '🔵',
+    Logo: MoovLogo,
     prefix: ['01']
   },
   { 
     id: 'wave', 
     name: 'Wave', 
     color: 'bg-cyan-500',
-    logo: '🌊',
+    Logo: WaveLogo,
     prefix: ['07', '01', '05']
   },
 ]
@@ -200,14 +235,14 @@ export default function MobileMoneyPayment({
                   <button
                     key={provider.id}
                     onClick={() => setSelectedProvider(provider.id)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center ${
                       selectedProvider === provider.id
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-primary-500 bg-primary-50 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                     }`}
                   >
-                    <div className="text-2xl mb-1">{provider.logo}</div>
-                    <div className="font-medium text-gray-900 text-sm">{provider.name}</div>
+                    <provider.Logo />
+                    <div className="font-medium text-gray-900 text-sm mt-2">{provider.name}</div>
                   </button>
                 ))}
               </div>
