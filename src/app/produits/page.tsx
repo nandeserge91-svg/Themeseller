@@ -164,7 +164,7 @@ export default function ProduitsPage() {
     }
 
     return result
-  }, [searchQuery, selectedCategory, selectedSort, selectedPriceRange, minRating])
+  }, [allProducts, searchQuery, selectedCategory, selectedSort, selectedPriceRange, minRating])
 
   const activeFiltersCount = [
     selectedCategory !== 'all',

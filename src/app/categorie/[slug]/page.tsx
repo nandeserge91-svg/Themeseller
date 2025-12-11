@@ -159,7 +159,7 @@ export default function CategoriePage() {
     }
 
     return result
-  }, [slug, searchQuery, selectedSort])
+  }, [allProducts, slug, searchQuery, selectedSort])
 
   // Afficher un loader pendant le chargement initial
   if (!isHydrated || isLoading || !hasLoadedOnce) {
