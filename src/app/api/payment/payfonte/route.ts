@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { verifyToken } from '@/lib/auth'
+import { nanoid } from 'nanoid'
 
 export const dynamic = 'force-dynamic'
 
 const PAYFONTE_CLIENT_ID = process.env.PAYFONTE_CLIENT_ID
 const PAYFONTE_CLIENT_SECRET = process.env.PAYFONTE_CLIENT_SECRET
-const PAYFONTE_BASE_URL = 'https://api.payfonte.com/v1'
+// Payfonte uses different base URLs - check their documentation
+const PAYFONTE_BASE_URL = process.env.PAYFONTE_BASE_URL || 'https://api.payfonte.com'
 
 // Initier un paiement Mobile Money
 export async function POST(request: NextRequest) {
@@ -49,9 +51,9 @@ export async function POST(request: NextRequest) {
 
     // Vérifier la configuration Payfonte
     if (!PAYFONTE_CLIENT_ID || !PAYFONTE_CLIENT_SECRET) {
-      console.error('Payfonte non configuré')
+      console.error('Payfonte non configuré - CLIENT_ID:', !!PAYFONTE_CLIENT_ID, 'SECRET:', !!PAYFONTE_CLIENT_SECRET)
       return NextResponse.json(
-        { error: 'Service de paiement non configuré' },
+        { error: 'Service de paiement non configuré. Contactez l\'administrateur.' },
         { status: 500 }
       )
     }
@@ -62,49 +64,79 @@ export async function POST(request: NextRequest) {
       formattedPhone = '225' + formattedPhone
     }
 
-    // Créer la transaction Payfonte
-    const payfonteResponse = await fetch(`${PAYFONTE_BASE_URL}/payments`, {
+    const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.themeseller.com'}/api/payment/payfonte/webhook`
+    const reference = `TS-${nanoid(10)}`
+
+    console.log('Payfonte Request:', {
+      url: `${PAYFONTE_BASE_URL}/v1/collect`,
+      amount: Math.round(amount),
+      currency,
+      phone: formattedPhone,
+      provider,
+      callback: callbackUrl,
+      reference
+    })
+
+    // Créer la transaction Payfonte - Try /v1/collect endpoint
+    const payfonteResponse = await fetch(`${PAYFONTE_BASE_URL}/v1/collect`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${Buffer.from(`${PAYFONTE_CLIENT_ID}:${PAYFONTE_CLIENT_SECRET}`).toString('base64')}`,
+        'Accept': 'application/json',
+        'X-Client-Id': PAYFONTE_CLIENT_ID,
+        'X-Client-Secret': PAYFONTE_CLIENT_SECRET,
       },
       body: JSON.stringify({
         amount: Math.round(amount),
-        currency,
-        phone_number: formattedPhone,
-        provider,
-        description: description || `Achat Themeseller #${orderId || 'N/A'}`,
-        callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.themeseller.com'}/api/payment/payfonte/webhook`,
+        currency: currency,
+        msisdn: formattedPhone,
+        operator: provider.toUpperCase().replace('_MONEY', '').replace('_', ''),
+        reference: reference,
+        reason: description || `Achat Themeseller`,
+        callback_url: callbackUrl,
         metadata: {
-          order_id: orderId,
+          order_id: orderId || reference,
           user_id: user.id,
         }
       }),
     })
 
-    const payfonteData = await payfonteResponse.json()
+    let payfonteData
+    const responseText = await payfonteResponse.text()
+    
+    try {
+      payfonteData = JSON.parse(responseText)
+    } catch {
+      console.error('Payfonte response not JSON:', responseText)
+      payfonteData = { message: responseText }
+    }
+
+    console.log('Payfonte Response:', {
+      status: payfonteResponse.status,
+      ok: payfonteResponse.ok,
+      data: payfonteData
+    })
 
     if (!payfonteResponse.ok) {
       console.error('Erreur Payfonte:', payfonteData)
       return NextResponse.json(
-        { error: payfonteData.message || 'Erreur lors de l\'initiation du paiement' },
+        { 
+          error: payfonteData.message || payfonteData.error || 'Erreur lors de l\'initiation du paiement',
+          details: payfonteData
+        },
         { status: 400 }
       )
     }
 
-    // Sauvegarder la transaction dans la base de données
-    // On peut créer un modèle Payment si nécessaire
-
     return NextResponse.json({
       success: true,
       transaction: {
-        id: payfonteData.id,
-        status: payfonteData.status,
-        amount: payfonteData.amount,
-        currency: payfonteData.currency,
-        provider: payfonteData.provider,
-        reference: payfonteData.reference,
+        id: payfonteData.id || payfonteData.transaction_id || reference,
+        status: payfonteData.status || 'pending',
+        amount: payfonteData.amount || amount,
+        currency: payfonteData.currency || currency,
+        provider: provider,
+        reference: payfonteData.reference || reference,
       },
       message: 'Veuillez valider le paiement sur votre téléphone',
     })
@@ -112,7 +144,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Erreur paiement Payfonte:', error)
     return NextResponse.json(
-      { error: 'Erreur serveur lors du paiement' },
+      { error: error instanceof Error ? error.message : 'Erreur serveur lors du paiement' },
       { status: 500 }
     )
   }
