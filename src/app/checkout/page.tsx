@@ -304,14 +304,9 @@ export default function CheckoutPage() {
                     <MobileMoneyPayment
                       amount={currentCurrency === 'XOF' ? total : Math.round(total * 655.957)}
                       currency="XOF"
-                      onSuccess={(txId) => {
-                        clearCart()
-                        router.push(`/checkout/success?transaction=${txId}`)
-                      }}
-                      onError={(error) => {
-                        toast.error(error)
-                      }}
-                      onCancel={() => setPaymentMethod('card')}
+                      country="CI"
+                      productIds={items.map(item => item.id)}
+                      onError={(error) => toast.error(error)}
                     />
                   ) : (
                     <div className="p-4 bg-warning-50 rounded-xl border border-warning-200 text-center">
